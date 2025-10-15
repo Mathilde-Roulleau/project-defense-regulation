@@ -1,0 +1,42 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+LOADING PACKAGES
+
+```{r}
+library("DESeq2")
+library(dplyr)
+library(stringr)
+library(apeglm)
+library(ggplot2)
+library("EnhancedVolcano")
+library("tidyr")
+library(edgeR)
+library(patchwork)
+```
+
+LOADING DATA
+
+```{r}
+SRRs <- read.csv("PRJNA303174.csv", header = TRUE)
+cts <- read.table("GCF_000468615.2-with-GCF_000909635.1-feature-counts-summary.tsv", header = TRUE)
+ds <- read.csv("DS_strain18_gene_names.csv", header = TRUE)[, c("Geneid", "subtype")]
+```
+
+COUNT MATRIX
+
+```{r}
+cnt_matrix <- cts[grepl("^NZ", cts$Chr), ] %>% # filter phage genes
+  left_join(SRR, by = "Run") %>%
+  mutate(condition = paste(time_point, State, rep, sep = "_")) %>%
+  select(Geneid, Length, condition, counts) %>%
+  pivot_wider(names_from = condition,
+              values_from = counts,
+              values_fill = 0) %>%
+  as.data.frame()
+
+rownames(cnt_matrix) <- cnt_matrix$Geneid
+cnt_matrix <- cnt_matrix[ , -1]
+```
