@@ -1,0 +1,324 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+LOADING OF THE DATA
+
+```{r}
+library("DESeq2")
+library(dplyr)
+library(stringr)
+library(apeglm)
+library(ggplot2)
+library("EnhancedVolcano")
+library("tidyr")
+library(edgeR)
+library(patchwork)
+
+
+
+SRRs <- read.csv("PRJNA303174.csv", header = TRUE)
+SRRs <- SRRs %>%
+  mutate(
+    State = ifelse(str_detect(Sample.Name, "C$"), "control", "infected"))
+SRRs <- SRRs %>% filter(strain == "18")
+SRRs[SRRs$Run == "SRR3038065",]$State <- "control"
+SRRs[SRRs$Run == "SRR3038062",]$State <- "infected"
+cts <- read.table("GCF_000468615.2-with-GCF_000909635.1-feature-counts-summary.tsv", header = TRUE)
+ds <- read.csv("DS_strain18_gene_names.csv", header = TRUE)[, c("Geneid", "type")]
+```
+
+COUNTS
+
+```{r}
+names(cts)[names(cts) == "run_accession"] <- "Run"
+```
+
+SRR CONDITIONS AND REPETITIONS
+
+```{r}
+SRR_infos <- SRRs[, c("Run", "time_point", "State")]
+# add rep column
+SRR_infos <- SRR_infos %>%
+  group_by(time_point, State) %>%
+  mutate(rep = row_number()) %>%
+  ungroup()
+```
+
+COUNT MATRIX
+
+```{r}
+cnt_matrix <- cts[grepl("^NZ", cts$Chr), ] %>% # filter bacteria genes
+  left_join(SRR_infos, by = "Run") %>%
+  mutate(condition = paste(time_point, State, rep, sep = "_")) %>%
+  select(Geneid, Length, condition, counts) %>%
+  pivot_wider(names_from = condition,
+              values_from = counts,
+              values_fill = 0) %>%
+  as.data.frame()
+
+rownames(cnt_matrix) <- cnt_matrix$Geneid
+cnt_matrix <- cnt_matrix[ , -1]
+```
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+NORMALIZATION (not needed when using DESeq)
+
+```{r}
+# CPM 
+cnt_matrix_cpm <- cpm(cnt_matrix[, -1])
+# RPKM - used after because also noramlize for gene length
+cnt_matrix_rpkm <- rpkm(cnt_matrix[, -1], gene.length = cnt_matrix[, "Length"])
+```
+
+REMOVING LOWLY EXPRESSED GENES
+
+```{r}
+cnt_matrix_log2 <- log2(1+cnt_matrix[, -1])
+geneplotter::multidensity(cnt_matrix_log2, main="Read count distributions",las=1,xlab="read count [log2]")
+#abline(v=log2(0.5), lty=3)
+
+#cnt_matrix_exp <- cnt_matrix[rowSums(cnt_matrix[, -1])>30,]
+```
+
+LOG FOLD CHANGE SHRINKAGE
+
+```{r}
+# Les LFC estimés par DESeq2 peuvent être extrêmes pour les gènes peu exprimés -> shrinkage 
+resLFC <- lfcShrink(dds, coef="condition_infected_vs_control", type="apeglm")
+```
+
+INDEPENDANT HYPOTHESIS WEIGHTING
+
+```{r}
+#p-values ajustées plus efficaces, ce qui peut augmenter le nombre de gènes détectés significatifs tout en contrôlant toujours le FDR (False Discovery Rate). # installer la version plus récente de R pour installer le package library("IHW") 
+resIHW <- results(dds, filterFun=ihw)
+```
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
+FUNCTION DESEQ + VOLCANO PLOT (control vs infected)
+
+```{r}
+deseq_volcano_c_i <- function(t) {
+  # columns of cnt_matrix to select
+  cols <- c(
+    paste0(t, "_control_1"),
+    paste0(t, "_control_2"),
+    paste0(t, "_control_3"),
+    paste0(t, "_infected_1"),
+    paste0(t, "_infected_2"),
+    paste0(t, "_infected_3")
+  )
+  
+  
+  # construction of DESeq dataset
+  coldata <- data.frame(
+    row.names = cols,
+    condition = factor(c("control", "control", "control", "infected", "infected", "infected"))
+  )
+  
+  countData <- round(cnt_matrix[,cols])
+  
+  dds <- DESeqDataSetFromMatrix(countData = countData,
+                                colData = coldata,
+                                design = ~ condition)
+  
+  # differential expression analysis
+  dds <- DESeq(dds)
+  res <- as.data.frame(results(dds, alpha = 0.1, pAdjustMethod = "fdr"))
+  
+  # label for defense genes 
+  labels <- rownames(res) %>%
+  as.data.frame() %>%
+  `colnames<-`("Geneid") %>%
+  left_join(ds, by = "Geneid") %>%
+  mutate(label = ifelse(is.na(type), "", type)) %>%
+  pull(label)
+  
+  # add column labels (character and logical)
+  res <- mutate(res, label=labels)
+  res <- mutate(res, ds = factor(res$label != ""))
+  
+  # plot -Log10 FDR vs Log fold change
+  plot <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = ds)) +
+    geom_point(data = subset(res, ds == "FALSE"), color = "grey", alpha = 0.3) +
+    geom_point(data = subset(res, ds == "TRUE"), color = "darkgreen") +
+    geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black") +
+    geom_label_repel(data = subset(res, ds == "TRUE" & padj < 0.05),
+        aes(label = label), 
+        size = 3, 
+        max.overlaps = Inf, 
+        show.legend = NA,
+        colour = "black"
+  ) +
+    xlim(-5, 5) +
+    ylim(0, 10) +
+    annotate("text", x=-3, y=10, label = paste0("Time_point = ",t)) +
+    theme_bw()
+
+
+  return(plot)
+}
+
+```
+
+```{r, fig.width=15, fig.height=10}
+plot0 <- deseq_volcano_c_i(0) 
+plot20 <- deseq_volcano_c_i(20) 
+plot40 <- deseq_volcano_c_i(40) 
+plot60 <- deseq_volcano_c_i(60) 
+plot120 <- deseq_volcano_c_i(120)
+
+plot0 + plot20 + plot40 + plot60 + plot120 + plot_layout(nrow = 2) 
+```
+
+FUNCTION DESEQ + VOLCANO PLOT (time 0 vs time 120)
+
+```{r}
+deseq_volcano_0_120 <- function(state) {
+  # columns of cnt_matrix to select
+  cols <- c(
+    paste0("0_", state, "_1"),
+    paste0("0_", state, "_2"),
+    paste0("0_", state, "_3"),
+    paste0("120_", state, "_1"),
+    paste0("120_", state, "_2"),
+    paste0("120_", state, "_3")
+  )
+  
+  
+  # construction of DESeq dataset
+  coldata <- data.frame(
+    row.names = cols,
+    condition = factor(c("0", "0", "0", "120", "120", "120"))
+  )
+  
+  countData <- round(cnt_matrix[,cols])
+  
+  dds <- DESeqDataSetFromMatrix(countData = countData,
+                                colData = coldata,
+                                design = ~ condition)
+  
+  # differential expression analysis
+  dds <- DESeq(dds)
+  res <- as.data.frame(results(dds, alpha = 0.3))
+  
+  # label for defense genes 
+  labels <- rownames(res) %>%
+  as.data.frame() %>%
+  `colnames<-`("Geneid") %>%
+  left_join(ds, by = "Geneid") %>%
+  mutate(label = ifelse(is.na(type), "", type)) %>%
+  pull(label)
+  
+  # add column labels (character and logical)
+  res <- mutate(res, label=labels)
+  res <- mutate(res, ds = factor(res$label != ""))
+
+  # plot -Log10 FDR vs Log fold change
+  plot <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = ds)) +
+    geom_point(data = subset(res, ds == "FALSE"), color = "grey", alpha = 0.3) +
+    geom_point(data = subset(res, ds == "TRUE"), color = "darkgreen") +
+    geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black") +
+    geom_label_repel(data = subset(res, ds == "TRUE"& padj < 0.05),
+        aes(label = label), 
+        size = 3, 
+        max.overlaps = Inf, 
+        show.legend = NA,
+        colour = "black"
+  ) +
+    xlim(-5, 5) +
+    ylim(0, 10) +
+    annotate("text", x=-3, y=10, label = paste0("State = ",state)) +
+    theme_bw()
+
+
+  return(plot)
+}
+
+```
+
+```{r}
+plotC <- deseq_volcano_0_120("control")
+plotI <- deseq_volcano_0_120("infected")
+
+plotC + plotI
+```
+
+DESEQ
+
+```{r}
+# columns of cnt_matrix to select
+t <- 120 
+cols <- c(
+  paste0(t, "_control_1"),
+  paste0(t, "_control_2"),
+  paste0(t, "_control_3"),
+  paste0(t, "_infected_1"),
+  paste0(t, "_infected_2"),
+  paste0(t, "_infected_3")
+)
+
+
+# construction of DESeq dataset
+coldata <- data.frame(
+  row.names = cols,
+  condition = factor(c("control", "control", "control", "infected", "infected", "infected"))
+)
+
+countData <- round(cnt_matrix[,cols])
+
+dds <- DESeqDataSetFromMatrix(countData = countData,
+                              colData = coldata,
+                              design = ~ condition)
+
+# differential expression analysis
+dds <- DESeq(dds)
+res <- as.data.frame(results(dds))
+```
+
+LABEL FOR DEFENSE SYSTEM GENES
+
+```{r}
+# label pour afficher les subtype des gènes impliqués dans les systèmes de défense 
+labels <- rownames(res) %>%
+  as.data.frame() %>%
+  `colnames<-`("Geneid") %>%
+  left_join(ds, by = "Geneid") %>%
+  mutate(label = ifelse(is.na(subtype), "", subtype)) %>%
+  pull(label)
+```
+
+```{r}
+res <- mutate(res, label=labels)
+res <- mutate(res, ds = factor(res$label != ""))
+```
+
+```{r}
+summary(res$pvalue)
+min(res$pvalue, na.rm = TRUE)
+hist(res$pvalue, breaks = 50)
+```
+
+VOLCANO PLOT
+
+```{r, fig.width=7, fig.height=7}
+# -Log10 FDR vs Log fold change
+ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = ds)) +
+  geom_point(data = subset(res, ds == "FALSE"), color = "black", alpha = 0.3) +
+  geom_point(data = subset(res, ds == "TRUE"), color = "green") +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black") +
+  geom_label_repel(data = subset(res, ds == "TRUE"),
+      aes(label = label), 
+      size = 3, 
+      max.overlaps = Inf, 
+      show.legend = NA,
+      colour = "black"
+) +
+  xlim(-5, 5) +
+  ylim(-5, 50) +
+  annotate("text", x=-4, y=50, label = paste0("Time_point = ",t))
+```

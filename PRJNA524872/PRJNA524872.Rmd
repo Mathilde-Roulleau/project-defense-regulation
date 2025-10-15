@@ -1,0 +1,105 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library("DESeq2")
+library(dplyr)
+library(stringr)
+library(apeglm)
+library(ggplot2)
+library("EnhancedVolcano")
+library("tidyr")
+library(edgeR)
+library(patchwork)
+```
+
+
+```{r}
+SRRs <- read.csv("PRJNA524872.csv", header = TRUE)
+SRRs <- SRRs %>%
+  mutate(State = ifelse(str_detect(Sample.Name, "Control"), "control", "infected"),
+      time_point = str_extract(Sample.Name, "\\d+")
+    )
+cts <- read.table("defense-infection-transcriptomics-QC2-feature-counts-summary.tsv", header = TRUE)
+names(cts)[names(cts) == "run_accession"] <- "Run"
+cts <- cts %>% filter(Run %in% SRRs$Run)
+```
+
+
+```{r}
+cnt_matrix <- cts[grepl("^NZ", cts$Chr), ] %>% # filter bacteria genes
+  left_join(SRRs, by = "Run") %>%
+  mutate(condition = paste(time_point, State, sep = "_")) %>%
+  select(Geneid, condition, counts) %>%
+  pivot_wider(names_from = condition,
+              values_from = counts,
+              values_fill = 0) %>%
+  as.data.frame()
+rownames(cnt_matrix) <- cnt_matrix$Geneid
+cnt_matrix <- cnt_matrix[ , -1]
+```
+
+```{r}
+deseq_volcano_c_i <- function(t) {
+  # columns of cnt_matrix to select
+  cols <- c(
+    paste0(t, "_control"),
+    paste0(t, "_infected")
+  )
+  
+  
+  # construction of DESeq dataset
+  coldata <- data.frame(
+    row.names = cols,
+    condition = factor(c("control", "infected"))
+  )
+  
+  countData <- round(cnt_matrix[,cols])
+  
+  dds <- DESeqDataSetFromMatrix(countData = countData,
+                                colData = coldata,
+                                design = ~ condition)
+  
+  # differential expression analysis
+  dds <- DESeq(dds)
+  res <- as.data.frame(results(dds, alpha = 0.1, pAdjustMethod = "fdr"))
+  
+  # label for defense genes 
+  labels <- rownames(res) %>%
+  as.data.frame() %>%
+  `colnames<-`("Geneid") %>%
+  left_join(ds, by = "Geneid") %>%
+  mutate(label = ifelse(is.na(type), "", type)) %>%
+  pull(label)
+  
+  # add column labels (character and logical)
+  res <- mutate(res, label=labels)
+  res <- mutate(res, ds = factor(res$label != ""))
+  
+  # plot -Log10 FDR vs Log fold change
+  plot <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = ds)) +
+    geom_point(data = subset(res, ds == "FALSE"), color = "grey", alpha = 0.3) +
+    geom_point(data = subset(res, ds == "TRUE"), color = "darkgreen") +
+    geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black") +
+    geom_label_repel(data = subset(res, ds == "TRUE" & padj < 0.05),
+        aes(label = label), 
+        size = 3, 
+        max.overlaps = Inf, 
+        show.legend = NA,
+        colour = "black"
+  ) +
+    xlim(-5, 5) +
+    ylim(0, 10) +
+    annotate("text", x=-3, y=10, label = paste0("Time_point = ",t)) +
+    theme_bw()
+
+
+  return(plot)
+}
+```
+
+
+
+
+
