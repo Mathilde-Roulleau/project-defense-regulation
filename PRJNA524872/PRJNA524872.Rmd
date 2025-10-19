@@ -2,6 +2,9 @@
 title: "R Notebook"
 output: html_notebook
 ---
+
+LOADING PACKAGES
+
 ```{r}
 library("DESeq2")
 library(dplyr)
@@ -12,20 +15,32 @@ library("EnhancedVolcano")
 library("tidyr")
 library(edgeR)
 library(patchwork)
+library(Biostrings)
+library("seqinr")
 ```
 
+LOADING FILES
 
 ```{r}
+# load metadata
 SRRs <- read.csv("PRJNA524872.csv", header = TRUE)
+# add columns for the state and time point of each run
 SRRs <- SRRs %>%
   mutate(State = ifelse(str_detect(Sample.Name, "Control"), "control", "infected"),
       time_point = str_extract(Sample.Name, "\\d+")
     )
+
+# load gene counts for each run
 cts <- read.table("defense-infection-transcriptomics-QC2-feature-counts-summary.tsv", header = TRUE)
 names(cts)[names(cts) == "run_accession"] <- "Run"
+# select runs from PRJNA524872 (because also contains runs from PRJNA524877)
 cts <- cts %>% filter(Run %in% SRRs$Run)
+
+# load defense systems for Vibrio cyclitrophicus obtained from defense finder
+ds <- read.csv("defense_systems.csv", header = TRUE)[, c("Geneid", "type")]
 ```
 
+COUNT MATRIX
 
 ```{r}
 cnt_matrix <- cts[grepl("^NZ", cts$Chr), ] %>% # filter bacteria genes
@@ -39,6 +54,8 @@ cnt_matrix <- cts[grepl("^NZ", cts$Chr), ] %>% # filter bacteria genes
 rownames(cnt_matrix) <- cnt_matrix$Geneid
 cnt_matrix <- cnt_matrix[ , -1]
 ```
+
+FUNCTION DESEQ + VOLCANO PLOT (control vs infected)
 
 ```{r}
 deseq_volcano_c_i <- function(t) {
@@ -67,11 +84,11 @@ deseq_volcano_c_i <- function(t) {
   
   # label for defense genes 
   labels <- rownames(res) %>%
-  as.data.frame() %>%
-  `colnames<-`("Geneid") %>%
-  left_join(ds, by = "Geneid") %>%
-  mutate(label = ifelse(is.na(type), "", type)) %>%
-  pull(label)
+    as.data.frame() %>%
+    `colnames<-`("Geneid") %>%
+    left_join(ds, by = "Geneid") %>%
+    mutate(label = ifelse(is.na(type), "", type)) %>%
+    pull(label)
   
   # add column labels (character and logical)
   res <- mutate(res, label=labels)
@@ -99,7 +116,6 @@ deseq_volcano_c_i <- function(t) {
 }
 ```
 
-
-
-
-
+```{r}
+deseq_volcano_c_i(0)
+```
