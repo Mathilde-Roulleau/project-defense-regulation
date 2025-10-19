@@ -1,9 +1,0 @@
-sys_id	type	subtype	activity	sys_beg	sys_end	protein_in_syst	genes_count	name_of_profiles_in_sys
-protein_Belisama_1	Belisama	Belisama	Defense	WP_010435089.1	WP_010435089.1	WP_010435089.1	1	Belisama__VCA0458
-protein_GAPS2_2	GAPS2	GAPS2	Defense	WP_010436641.1	WP_010436641.1	WP_010436641.1	1	GAPS2__GAPS2
-protein_dGTPase_5	dGTPase	dGTPase	Defense	WP_010439534.1	WP_010439534.1	WP_010439534.1	1	dGTPase__Sp_dGTPase
-protein_RM_Type_IV_7	RM	RM_Type_IV	Defense	WP_016796441.1	WP_016796441.1	WP_016796441.1	1	RM_Type_IV__FAM_1
-protein_RM_Type_IIG_6	RM	RM_Type_IIG	Defense	WP_102277560.1	WP_102277560.1	WP_102277560.1	1	RM_Type_IIG__Type_IIG_1
-protein_NLR_like_bNACHT01_3	NLR	NLR_like_bNACHT01	Defense	WP_102277640.1	WP_102277640.1	WP_102277640.1	1	NLR_like_bNACHT01__NLR_like_bNACHT01
-protein_SanaTA_4	SanaTA	SanaTA	Defense	WP_102360698.1	WP_102360699.1	WP_102360698.1,WP_102360699.1	2	SanaTA__SanaA,SanaTA__SanaT_1
-protein_RM_Type_IV_8	RM	RM_Type_IV	Defense	WP_408103882.1	WP_408103882.1	WP_408103882.1	1	RM_Type_IV__FAM_2

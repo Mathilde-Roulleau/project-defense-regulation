@@ -1,0 +1,10 @@
+sys_id	type	subtype	activity	sys_beg	sys_end	protein_in_syst	genes_count	name_of_profiles_in_sys
+reordered_PfiAT_5	PfiAT	PfiAT	Defense	WP_102304047.1	WP_029203131.1	WP_102304047.1,WP_029203131.1	2	PfiAT__PfiA,PfiAT__PfiT
+reordered_dGTPase_7	dGTPase	dGTPase	Defense	WP_010439534.1	WP_010439534.1	WP_010439534.1	1	dGTPase__Sp_dGTPase
+reordered_RM_Type_IIG_8	RM	RM_Type_IIG	Defense	WP_102277560.1	WP_102277560.1	WP_102277560.1	1	RM_Type_IIG__Type_IIG_1
+reordered_RM_Type_IV_9	RM	RM_Type_IV	Defense	WP_016796441.1	WP_408103882.1	WP_016796441.1,WP_408103882.1	2	RM_Type_IV__FAM_1,RM_Type_IV__FAM_2
+reordered_Gabija_3	Gabija	Gabija	Defense	WP_408103910.1	WP_102360697.1	WP_408103910.1,WP_102360697.1	2	Gabija__GajA,Gabija__GajB_2
+reordered_SanaTA_6	SanaTA	SanaTA	Defense	WP_102360698.1	WP_102360699.1	WP_102360698.1,WP_102360699.1	2	SanaTA__SanaA,SanaTA__SanaT_1
+reordered_GAPS2_2	GAPS2	GAPS2	Defense	WP_010436641.1	WP_010436641.1	WP_010436641.1	1	GAPS2__GAPS2
+reordered_Belisama_1	Belisama	Belisama	Defense	WP_010435089.1	WP_010435089.1	WP_010435089.1	1	Belisama__VCA0458
+reordered_NLR_like_bNACHT01_4	NLR	NLR_like_bNACHT01	Defense	WP_102277640.1	WP_102277640.1	WP_102277640.1	1	NLR_like_bNACHT01__NLR_like_bNACHT01

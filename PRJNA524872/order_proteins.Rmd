@@ -2,38 +2,77 @@
 title: "Order proteins for .faa files"
 output: html_notebook
 ---
+
 ```{r}
 library(Biostrings)
 library("tidyr")
 library("dplyr")
 library("stringr")
+library("seqinr")
 ```
 
 LOADING .fna FILE AND EXTRACTING PROTEIN ID
+
 ```{r}
-fna <- readDNAStringSet("cds_from_genomic.fna") %>% # extract .fna file (proteins' sequences)
-  as.data.frame()
+fna <- read.fasta("cds_from_genomic.fna", as.string = TRUE) # extract .fna file (proteins' sequences)
+
+fna <- data.frame(
+  sequence = sapply(fna, function(x) paste(x, collapse = "")),  # DNA
+  name = sapply(fna, function(x) attr(x, "name")),              # name
+  annot = sapply(fna, function(x) attr(x, "Annot")),            # Annot
+  stringsAsFactors = FALSE
+  ) 
+
 fna <- fna %>% mutate( # add column with protein_id
-    protein_id = str_extract(rownames(fna), "(?<=protein_id=)[^]]+")
-  )
-fna <- fna[!is.na(fna$protein_id), ] # removes rows with no protein_id
+    protein_id = str_extract(fna$annot, "(?<=protein_id=)[^]]+")
+  ) 
+row.names(fna) <- NULL # reset indexes
+
+fna <- fna[!is.na(fna$protein_id), ] # remove rows with no protein_id
 ```
 
 LOADING .faa FILE TO REORDER
+
 ```{r}
-faa <- readDNAStringSet("protein.faa")
-faa_ids <- sub(" .*", "", names(faa))  # take only the protein_id
+faa <- read.fasta("protein.faa")
+faa_ids <- sub(" .*", "", names(faa))  # create list with protein_id
 ```
 
 REORDERING .faa FILE FROM .fna FILE
+
 ```{r}
-fna <- fna[fna$protein_id %in% faa_ids,] # select protein_id that are both in .faa and .fna
-ordered_faa <- faa[fna$protein_id]
-writeXStringSet(ordered_faa, "reordered.faa") # save the ordered .faa file
+fna <- fna[fna$protein_id %in% faa_ids,]
+order_idx <- match(fna$protein_id, faa_ids) # match the order of the proteins from .fna
+ordered_faa <- faa[order_idx] # apply the right order to the .faa
+
+# save the ordered .faa file
+write.fasta(sequences = ordered_faa, names = sub("^>", "", sapply(ordered_faa, function(x) attr(x, "Annot"))),file.out = "reordered.faa")
 ```
 
+ADDING Gene ID TO THE DEFENSE SYSTEMS
 
+```{r}
+#library(rtracklayer)
+# load annotation features .gff
+gff <- import("genomic.gff") 
+gff <- as.data.frame(gff, row.names = NULL)
+gff_cds <- gff[gff[, "type"] == "CDS", c("Name", "locus_tag")] # only keep coding genes, only keep the protein and gene ID
+colnames(gff_cds)[colnames(gff_cds) == "Name"] <- "protein_in_syst"
+```
 
+```{r}
+# load defense systems of Vibrio cyclitrophicus obtained from defense finder
+defense_systems <- read.csv("defense_systems.tsv", header = TRUE, sep = "")
+# separate rows with several associated proteins
+defense_systems <- defense_systems %>% separate_rows("protein_in_syst", sep = ",")
+```
 
+```{r}
+# join with the protein ID
+defense_systems <- defense_systems %>%
+  left_join(gff_cds, by = "protein_in_syst")
+names(defense_systems)[names(defense_systems)=="locus_tag"] <- "Geneid"
 
-
+# save the defense systems file
+write.csv(defense_systems, file = "defense_systems.csv")
+```
