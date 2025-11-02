@@ -52,7 +52,7 @@ COUNT MATRIX
 cnt_matrix <- cts[grepl("^NZ", cts$Chr), ] %>% # filter bacteria genes
   left_join(SRR_infos, by = "Run") %>%
   mutate(condition = paste(time_point, State, rep, sep = "_")) %>%
-  select(Geneid, Length, condition, counts) %>%
+  select(Geneid, condition, counts) %>%
   pivot_wider(names_from = condition,
               values_from = counts,
               values_fill = 0) %>%

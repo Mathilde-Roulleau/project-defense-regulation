@@ -25,7 +25,7 @@ LOADING FILES
 
 ```{r}
 # load metadata
-SRRs <- read.csv("metadata.csv", header = TRUE)
+SRRs <- read.csv("PRJNA524877.csv", header = TRUE)
 # add columns for the state and time point of each run
 SRRs <- SRRs %>%
   mutate(State = ifelse(str_detect(Sample.Name, "Control"), "control", "infected"),
@@ -33,9 +33,9 @@ SRRs <- SRRs %>%
     )
 
 # load gene counts for each run
-cts <- read.table("counts.tsv", header = TRUE)
+cts <- read.table("defense-infection-transcriptomics-QC2-feature-counts-summary.tsv", header = TRUE)
 names(cts)[names(cts) == "run_accession"] <- "Run"
-# select runs from PRJNA524872 (because also contains runs from PRJNA524877)
+# select runs from PRJNA524877 (because also contains runs from PRJNA524872)
 cts <- cts %>% filter(Run %in% SRRs$Run) %>%
   mutate(Gene_origin = ifelse(grepl("^NZ", Chr), "Bacteria", "Phage"))
 
@@ -53,42 +53,50 @@ cts_per_run_b_p <- cts %>%
 cts_per_run_b_p <- cts_per_run_b_p %>%
   group_by(Library.Name, Gene_origin) %>%
   summarise(counts = sum(counts), .groups = "drop") %>%
-  as.data.frame()
+  as.data.frame() 
 colnames(cts_per_run_b_p)[colnames(cts_per_run_b_p) == "Library.Name"] <- "Run"
+# Add a Time column with the time after infection
+cts_per_run_b_p$Time <- str_extract(cts_per_run_b_p$Run, "\\d+")
+# One sample was taken before infection so had no time given in the metadata
+cts_per_run_b_p$Time <- replace_na(cts_per_run_b_p$Time, "0-")
 
 # number of gene counts per run
 cts_per_run <- cts_per_run_b_p %>%
-  group_by(Run) %>%
+  group_by(Time) %>%
   summarise(counts = sum(counts), .groups = "drop") 
 ```
 
 ```{r}
 # Bar plot number of gene counts per run
 par(mgp = c(3, 0.2, 0))
-barplot(cts_per_run$counts, main = "Number of reads per run", names.arg = cts_per_run$Run, ylab = "# reads", col = "darkblue", border = NA, las = 2, cex.names = 0.7, cex.axis = 0.8)
+barplot(cts_per_run$counts, main = "Number of reads per run", names.arg = cts_per_run$Time, ylab = "# reads", xlab = "Time after infection (min)", col = "darkblue", border = NA, las = 2, cex.names = 0.7, cex.axis = 0.8)
 
 # Box plot number of gene counts per run
 boxplot(cts_per_run$counts, main = "Number of reads per run distribution", ylab = "# reads", col = "darkblue", las =1, cex.axis = 0.8)
 
 # Compute coefficient of variation (SD / mean)
-# >0.2 so not homogenous
+# <0.2 so fairly homogenous
 CV <- sd(cts_per_run$counts)/mean(cts_per_run$counts)
 ```
 
 ```{r}
 # Plots bacteria and phage gene counts per run 
-ggplot(cts_per_run_b_p, aes(x = Run, y = counts, fill = Gene_origin)) +
+ggplot(cts_per_run_b_p, aes(x = Time, y = counts, fill = Gene_origin)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.8)) +
   scale_fill_manual(values = c("Phage" = "darkgreen", "Bacteria" = "darkblue")) +
   theme_minimal() +
   labs(
-    x = "Run",
-    y = "# genes",
+    x = "Time after infection (min)",
+    y = "# genes counted in the sample",
     fill = "Gene origin"
   ) +
   theme(
     axis.text.x = element_text(angle = 90) 
 )
+
+# Compute coefficient of variation (SD / mean) for bacteria gene counts
+# CV >0.2 very heterogenous gene count among samples !
+CV_bacteria <- sd(cts_per_run_b_p[cts_per_run_b_p$Gene_origin == "Bacteria", ]$counts)/mean(cts_per_run_b_p[cts_per_run_b_p$Gene_origin == "Bacteria", ]$counts)
 ```
 
 ```{r}
@@ -157,13 +165,15 @@ FUNCTION DESEQ + VOLCANO PLOT (control vs infected)
 
 ```{r}
 # columns of cnt_matrix to select
-cols <- c("control_0", "control_15", "control_30", "control_45", "control_60", "infected_0", "infected_15", "infected_30", "infected_45", "infected_60")
+cols <- c("infected_0", "infected_NA", "infected_15", "infected_30", "infected_45", "infected_60", "infected_75", "infected_90", "infected_105", "infected_120")
 
 
 # construction of DESeq dataset
+# preinfection and infection at time 0 were taken as control replicates
+# all samples after infection (whatever the time) were taken as replicates
 coldata <- data.frame(
   row.names = cols,
-  condition = factor(c("control", "control", "control", "control", "control", "infected", "infected", "infected", "infected", "infected"))
+  condition = factor(c("control", "control", "infected", "infected", "infected", "infected", "infected", "infected", "infected", "infected"))
 )
 
 countData <- round(cnt_matrix[,cols])
@@ -189,7 +199,7 @@ res <- mutate(res, label=labels)
 res <- mutate(res, ds = factor(res$label != ""))
 
 # plot -Log10 FDR vs Log fold change
-plot <- ggplot(res, aes(x = log2FoldChange, y = -log10(pvalue), color = ds)) +
+plot <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = ds)) +
   geom_point(data = subset(res, ds == "FALSE"), color = "grey", alpha = 0.3) +
   geom_point(data = subset(res, ds == "TRUE"), color = "darkgreen") +
   geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black") +
