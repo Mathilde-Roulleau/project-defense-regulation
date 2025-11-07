@@ -83,11 +83,11 @@ CV <- sd(cts_per_run$counts)/mean(cts_per_run$counts)
 # Plots bacteria and phage gene counts per run 
 ggplot(cts_per_run_b_p, aes(x = Time, y = counts, fill = Gene_origin)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.8)) +
-  scale_fill_manual(values = c("Phage" = "darkgreen", "Bacteria" = "darkblue")) +
+  scale_fill_manual(values = c("Phage" = "red", "Bacteria" = "darkblue")) +
   theme_minimal() +
   labs(
     x = "Time after infection (min)",
-    y = "# genes counted in the sample",
+    y = "# reads",
     fill = "Gene origin"
   ) +
   theme(
@@ -134,7 +134,7 @@ ggplot(pcoa_df, aes(x = Axis1, y = Axis2, color = State, label = label)) +
   geom_point(size = 4) +
   geom_text(vjust = -0.8, size = 3.5, color = "black") +
   scale_color_manual(
-    values = c("infected" = "darkgreen",  
+    values = c("infected" = "red",  
                "control" = "darkblue")   
   ) +
   theme_minimal() +
@@ -159,6 +159,66 @@ cnt_matrix <- cts[cts$Gene_origin == "Bacteria", ] %>% # filter bacteria genes
 cnt_matrix$Geneid <- gsub("^cds-", "", cnt_matrix$Geneid)
 rownames(cnt_matrix) <- cnt_matrix$Geneid
 cnt_matrix <- cnt_matrix[ , -1]
+```
+
+CLR
+
+```{r}
+# Transform the cts_matrix dataframe into a Deseq object
+dds_for_vst <- DESeqDataSetFromMatrix(round(cnt_matrix), as.data.frame(colnames(cnt_matrix)), design = ~ 1)
+# Apply a variance stabilizing transformation (VST) to the count data
+vst <- varianceStabilizingTransformation(dds_for_vst) %>%
+  assay() %>%
+  as.data.frame()
+
+# Add pseudocount to avoid counts = 0
+pseudocount <- min(vst[vst > 0])/10  
+vst <- vst + pseudocount
+vst <- 2^(vst)
+
+# Normalization by gene length
+genes_length <- cts[match(intersect(rownames(vst), cts$Geneid), cts$Geneid), ]$Length
+vst <- vst/(genes_length * 10^(-3))
+
+# Centered Log2 Ratio (CLR)
+clr <- log2(vst / exp(rowMeans(log(vst))))
+```
+
+```{r}
+plot_CLR <- function(protein, ds_type) {
+  protein_clr <- clr[protein, ]
+
+  protein_clr <- protein_clr %>%
+    t() %>%
+    as.data.frame() %>%
+    rownames_to_column("condition_time") %>%
+    rename(value = protein) %>%
+    separate(condition_time, into = c("condition", "time"), sep = "_") %>%
+    mutate(time = as.numeric(time), time = ifelse(is.na(time), -15, time))
+  
+  protein_clr <- protein_clr[, order(names(protein_clr))]
+    
+  # Plot
+  ggplot(protein_clr, aes(x = time, y = value, group = condition)) +
+    geom_line(size = 1.2) +
+    geom_point(size = 3) +
+    theme_minimal() +
+    ylim(-6, 8) +
+    labs(
+      title = paste("Defense system = ", ds_type),
+      x = "Time post infection (min)",
+      y = "CLR")
+}
+```
+
+```{r, fig.height=16, fig.width=20}
+plots <- list()
+
+for (i in rownames(ds)) {
+  plots[[i]] <- plot_CLR(ds[i, ]$protein_in_syst, ds[i, ]$type)
+}
+
+wrap_plots(plots[1:13], ncol = 4)
 ```
 
 FUNCTION DESEQ + VOLCANO PLOT (control vs infected)

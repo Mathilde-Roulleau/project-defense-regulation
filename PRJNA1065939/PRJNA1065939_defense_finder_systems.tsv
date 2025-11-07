@@ -1,0 +1,9 @@
+sys_id	type	subtype	activity	sys_beg	sys_end	protein_in_syst	genes_count	name_of_profiles_in_sys
+ordered_protein_Abi2_1	Abi2	Abi2	Defense	WP_001822249.1	WP_001822249.1	WP_001822249.1	1	Abi2__Abi_2
+ordered_protein_FS_Sma_5	FS_Sma	FS_Sma	Defense	WP_000041883.1	WP_000041883.1	WP_000041883.1	1	FS_Sma__Sma
+ordered_protein_RM_Type_I_9	RM	RM_Type_I	Defense	WP_000028628.1	WP_000072584.1	WP_000028628.1,WP_000072584.1	2	RM__Type_I_MTases_FAM_0,RM__Type_I_S_51
+ordered_protein_gcu233_6	gcu233	gcu233	Defense	WP_000633782.1	WP_000633782.1	WP_000633782.1	1	gcu233__gcu233
+ordered_protein_AbiD_2	AbiD	AbiD	Defense	WP_000801979.1	WP_000801979.1	WP_000801979.1	1	AbiD__AbiD
+ordered_protein_Avs_II_3	Avs	Avs_II	Defense	WP_000831218.1	WP_000831218.1	WP_000831218.1	1	Avs_II__Avs2A
+ordered_protein_RM_Type_I_10	RM	RM_Type_I	Defense	WP_000072576.1	WP_000028659.1	WP_000072576.1,WP_000028659.1	2	RM__Type_I_MTases_FAM_0,RM__Type_I_S_51
+ordered_protein_Dodola_4	Dodola	Dodola	Defense	WP_000402465.1	WP_418356866.1	WP_000402465.1,WP_418356866.1	2	Dodola__DolA,Dodola__DolB

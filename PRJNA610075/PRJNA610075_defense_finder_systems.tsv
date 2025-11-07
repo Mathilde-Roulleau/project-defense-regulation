@@ -1,0 +1,17 @@
+sys_id	type	subtype	activity	sys_beg	sys_end	protein_in_syst	genes_count	name_of_profiles_in_sys
+ordered_protein_RosmerTA_17	RosmerTA	RosmerTA	Defense	WP_230676595.1	WP_038251177.1	WP_230676595.1,WP_038251177.1	2	RosmerTA__RmrA_2634932349,RosmerTA__RmrT_2634932349
+ordered_protein_BREX_I_2	BREX	BREX_I	Defense	WP_172460320.1	WP_004722531.1	WP_172460320.1,WP_038251183.1,WP_004722527.1,WP_004722528.1,WP_004722530.1,WP_004722531.1	6	BREX__brxA_DUF1819,BREX__brxB_DUF1788,BREX__brxC,BREX__brxL,BREX__pglX1,BREX__pglZA
+ordered_protein_Mokosh_Type_I_A_8	Mokosh	Mokosh_Type_I_A	Defense	WP_038251284.1	WP_049687943.1	WP_038251284.1,WP_049687943.1	2	Mokosh_type_I__MkoA_A,Mokosh_type_I__MkoB_A
+ordered_protein_DS-6_5	DS-6	DS-6	Defense	WP_040155144.1	WP_040155143.1	WP_040155144.1,WP_040155143.1	2	DS-6__DS-6A,DS-6__DS-6B
+ordered_protein_CoCoNut_I-C_3	CoCoNut	CoCoNut_I-C	Defense	WP_004723224.1	WP_038251087.1	WP_004723224.1,WP_038251087.1	2	CoCoNut-I-C__I-C_CnuB,CoCoNut-I-C__I-C_CnuC
+ordered_protein_RM_Type_I_19	RM	RM_Type_I	Defense	WP_004720069.1	WP_038251704.1	WP_004720069.1,WP_038251704.1	2	RM__Type_I_MTases_FAM_0,RM__Type_I_S_06
+ordered_protein_RloC_15	RloC	RloC	Defense	WP_040155139.1	WP_040155139.1	WP_040155139.1	1	RloC__RloC
+ordered_protein_PD-T4-5_12	PD-T4-5	PD-T4-5	Defense	WP_038251856.1	WP_038251856.1	WP_038251856.1	1	PD-T4-5__PD-T4-5
+ordered_protein_Lamassu-Cap4_nuclease_6	Lamassu-Fam	Lamassu-Cap4_nuclease	Defense	WP_040154916.1	WP_230596548.1	WP_040154916.1,WP_040154917.1,WP_230596548.1	3	Lamassu-Fam__LmuA_effector_Cap4_nuclease_II,Lamassu-Fam__LmuB_SMC_Cap4_nuclease_II,Lamassu-Fam__LmuC_acc_Cap4_nuclease
+ordered_protein_RloC_16	RloC	RloC	Defense	WP_115175337.1	WP_115175337.1	WP_115175337.1	1	RloC__RloC
+ordered_protein_PD-Lambda-1_9	PD-Lambda-1	PD-Lambda-1	Defense	WP_004722040.1	WP_004722040.1	WP_004722040.1	1	PD-Lambda-1__PD-Lambda-1
+ordered_protein_DS-27_4	DS-27	DS-27	Defense	WP_049688207.1	WP_049688207.1	WP_049688207.1	1	DS-27__DS-27
+ordered_protein_PD-Lambda-1_10	PD-Lambda-1	PD-Lambda-1	Defense	WP_038276669.1	WP_038276669.1	WP_038276669.1	1	PD-Lambda-1__PD-Lambda-1
+ordered_protein_PD-Lambda-1_11	PD-Lambda-1	PD-Lambda-1	Defense	WP_004723288.1	WP_004723288.1	WP_004723288.1	1	PD-Lambda-1__PD-Lambda-1
+ordered_protein_Retron_I_C_14	Retron	Retron_I_C	Defense	WP_004723280.1	WP_004723280.1	WP_004723280.1	1	Retron_I_C__RT_1_C1
+ordered_protein_PD-T7-1_13	PD-T7-1	PD-T7-1	Defense	WP_004723281.1	WP_004723281.1	WP_004723281.1	1	PD-T7-1__PD-T7-1

@@ -1,5 +1,20 @@
 # Add Gene ID column to the defense systems file from the annotation features file (.gff)
-# Necessitates packages rtracklayer, dplyr
+
+args <- commandArgs(trailingOnly = TRUE)
+
+if (length(args) < 2) {
+  stop("2 arguments for this script <ds_file> <gff_file>")
+}
+
+ds_file <- args[1]
+gff_file <- args[2]
+
+library(rtracklayer)
+library(dplyr)
+library(tidyr)
+
+add_gene_id_ds(ds_file, gff_file)
+
 
 add_gene_id_ds <- function(ds_file, gff_file) {
   # load annotation features .gff

@@ -1,0 +1,3 @@
+sys_id	type	subtype	activity	sys_beg	sys_end	protein_in_syst	genes_count	name_of_profiles_in_sys
+ordered_protein_Rst_HelicaseDUF2290_1	Rst_HelicaseDUF2290	Rst_HelicaseDUF2290	Defense	NP_250062.1	NP_250063.1	NP_250062.1,NP_250063.1	2	Rst_HelicaseDUF2290__DUF2290,Rst_HelicaseDUF2290__Helicase
+ordered_protein_RM_Type_I_3	RM	RM_Type_I	Defense	NP_251422.1	NP_251425.1	NP_251422.1,NP_251424.1,NP_251425.1	3	RM__Type_I_MTases_FAM_3,RM__Type_I_REases_FAM_1.einsi_trimmed,RM__Type_I_S_52

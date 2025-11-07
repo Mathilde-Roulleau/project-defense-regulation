@@ -19,6 +19,8 @@ library(Biostrings)
 library("seqinr")
 library(vegan)
 library(ape)
+library(tibble)
+library(patchwork)
 ```
 
 LOADING FILES
@@ -38,6 +40,7 @@ names(cts)[names(cts) == "run_accession"] <- "Run"
 # select runs from PRJNA524872 (because also contains runs from PRJNA524877)
 cts <- cts %>% filter(Run %in% SRRs$Run) %>%
   mutate(Gene_origin = ifelse(grepl("^NZ", Chr), "Bacteria", "Phage"))
+cts$Geneid <- sub("^cds-", "", cts$Geneid)
 
 # load defense systems for Vibrio cyclitrophicus obtained from defense finder
 ds <- read.csv("defense_systems.csv", header = TRUE)[, c("Geneid", "protein_in_syst", "type")]
@@ -79,11 +82,11 @@ CV <- sd(cts_per_run$counts)/mean(cts_per_run$counts)
 # Plots bacteria and phage gene counts per run 
 ggplot(cts_per_run_b_p, aes(x = Run, y = counts, fill = Gene_origin)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.8)) +
-  scale_fill_manual(values = c("Phage" = "darkgreen", "Bacteria" = "darkblue")) +
+  scale_fill_manual(values = c("Phage" = "red", "Bacteria" = "darkblue")) +
   theme_minimal() +
   labs(
     x = "Run",
-    y = "# genes",
+    y = "# reads",
     fill = "Gene origin"
   ) +
   theme(
@@ -126,7 +129,7 @@ ggplot(pcoa_df, aes(x = Axis1, y = Axis2, color = State, label = label)) +
   geom_point(size = 4) +
   geom_text(vjust = -0.8, size = 3.5, color = "black") +
   scale_color_manual(
-    values = c("infected" = "darkgreen",  
+    values = c("infected" = "red",  
                "control" = "darkblue")   
   ) +
   theme_minimal() +
@@ -139,21 +142,90 @@ ggplot(pcoa_df, aes(x = Axis1, y = Axis2, color = State, label = label)) +
 COUNT MATRIX
 
 ```{r}
-cnt_matrix <- cts[cts$Gene_origin == "Bacteria", ] %>% # filter bacteria genes
-  left_join(SRRs, by = "Run") %>%
-  mutate(condition = paste(State, time_point, sep = "_")) %>%
-  select(Geneid, condition, counts) %>%
-  pivot_wider(names_from = condition,
-              values_from = counts,
-              values_fill = 0) %>%
-  as.data.frame()
-
-cnt_matrix$Geneid <- gsub("^cds-", "", cnt_matrix$Geneid)
-rownames(cnt_matrix) <- cnt_matrix$Geneid
-cnt_matrix <- cnt_matrix[ , -1]
+cnt_matrix <- cts[cts$Gene_origin == "Bacteria", ] %>% 
+# filter bacteria genes   
+left_join(SRRs, by = "Run") %>%   
+  mutate(condition = paste(State, time_point, sep = "_")) %>%   
+  select(Geneid, condition, counts) %>%   
+  pivot_wider(names_from = condition,               
+              values_from = counts,               
+              values_fill = 0) %>%   
+  as.data.frame()  
+cnt_matrix$Geneid <- gsub("^cds-", "", cnt_matrix$Geneid) 
+rownames(cnt_matrix) <- cnt_matrix$Geneid 
+cnt_matrix <- cnt_matrix[ , -1] 
+cnt_matrix <- cnt_matrix[, order(names(cnt_matrix))]
 ```
 
-FUNCTION DESEQ + VOLCANO PLOT (control vs infected)
+CLR
+
+```{r}
+# Transform the cts_matrix dataframe into a Deseq object
+dds_for_vst <- DESeqDataSetFromMatrix(round(cnt_matrix), as.data.frame(colnames(cnt_matrix)), design = ~ 1)
+# Apply a variance stabilizing transformation (VST) to the count data
+vst <- varianceStabilizingTransformation(dds_for_vst) %>%
+  assay() %>%
+  as.data.frame()
+
+# Add pseudocount to avoid counts = 0
+pseudocount <- min(vst[vst > 0])/10  
+vst <- vst + pseudocount
+vst <- 2^(vst)
+
+# Normalization by gene length
+genes_length <- cts[match(intersect(rownames(vst), cts$Geneid), cts$Geneid), ]$Length
+vst <- vst/(genes_length * 10^(-3))
+
+# Centered Log2 Ratio (CLR)
+clr <- log2(vst / exp(rowMeans(log(vst))))
+```
+
+```{r}
+plot_CLR <- function(protein, ds_type) {
+  protein_clr <- clr[protein, ]
+
+  protein_clr <- protein_clr %>%
+    t() %>%
+    as.data.frame() %>%
+    rownames_to_column("condition_time") %>%
+    rename(value = protein) %>%
+    separate(condition_time, into = c("condition", "time"), sep = "_") %>%
+    mutate(time = as.numeric(time))
+  
+  # Plot
+  ggplot(protein_clr, aes(x = time, y = value, color = condition, group = condition)) +
+    geom_line(size = 1.2) +
+    geom_point(size = 3) +
+    theme_minimal() +
+    scale_color_manual(
+    values = c("infected" = "red",  
+               "control" = "darkblue")   
+    ) +
+    ylim(-0.6, 0.8) +
+    labs(
+      title = paste("Defense system = ", ds_type),
+      x = "Time post infection (min)",
+      y = "CLR",
+      color = "Condition"
+    )
+}
+```
+
+```{r, fig.height=16, fig.width=20}
+plots <- list()
+
+for (i in rownames(ds)) {
+  plots[[i]] <- plot_CLR(ds[i, ]$protein_in_syst, ds[i, ]$type)
+}
+
+wrap_plots(plots[1:13], ncol = 4)
+```
+
+```{r}
+min(clr[ds$protein_in_syst, ])
+```
+
+DESEQ + VOLCANO PLOT (control vs infected)
 
 ```{r}
 # columns of cnt_matrix to select
