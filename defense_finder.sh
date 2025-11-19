@@ -1,31 +1,27 @@
 #!/bin/bash
 
-# Liste des dossiers contenant ordered_protein.faa
 folders=(
-"/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA1025116"
-"/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA1065939"
-"/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA1068994"
-"/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA340008"
-"/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA641380"
-"/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJEB12430"
-"/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA524872"
-"/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA633474"
-"/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA528935"
-"/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA534259"
-"/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA610075"
-"/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA1230733"
-"/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA1242552"
-"/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA1254618"
-"/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA481888"
-"/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA882106"
-"/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA847232"
+    "/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA1065926"
+    "/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA1076276"
+    "/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA644242"
+    "/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA323606"
+    "/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA345214"
+    "/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJEB35542"
+    "/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA662856"
+    "/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA524877"
+    "/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJEB31642"
+    "/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA548534"
+    "/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA530399"
+    "/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA262612"
+    "/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJDB12232"
+    "/mnt/c/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA1129356"
 )
 
-# Dossier temporaire pour travailler
+# Temporary folder
 tmp_dir=~/tmp_defense_finder
 mkdir -p "$tmp_dir"
 
-# Dossier pour stocker tous les résultats finaux
+# Folder to store results
 results_dir=~/defense_finder_results
 mkdir -p "$results_dir"
 

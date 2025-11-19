@@ -1,0 +1,9 @@
+sys_id,type,subtype,activity,sys_beg,sys_end,protein_in_syst,genes_count,name_of_profiles_in_sys,Geneid
+ordered_protein_Retron_II_2,Retron,Retron_II,Defense,WP_001034589.1,WP_226347323.1,WP_001034589.1,2,"Retron_II__NDT,Retron__RT_Tot_6",HO396_RS04345
+ordered_protein_Retron_II_2,Retron,Retron_II,Defense,WP_001034589.1,WP_226347323.1,WP_226347323.1,2,"Retron_II__NDT,Retron__RT_Tot_6",HO396_RS04350
+ordered_protein_MazEF_1,MazEF,MazEF,Defense,WP_000254738.1,WP_000581937.1,WP_000254738.1,2,"MazEF__MazE,MazEF__MazF",HO396_RS13415
+ordered_protein_MazEF_1,MazEF,MazEF,Defense,WP_000254738.1,WP_000581937.1,WP_000581937.1,2,"MazEF__MazE,MazEF__MazF",HO396_RS13420
+ordered_protein_RM_Type_IV_5,RM,RM_Type_IV,Defense,WP_001318550.1,WP_000443948.1,WP_001318550.1,2,"RM_Type_IV__FAM_1,RM_Type_IV__FAM_2",HO396_RS21630
+ordered_protein_RM_Type_IV_5,RM,RM_Type_IV,Defense,WP_001318550.1,WP_000443948.1,WP_000443948.1,2,"RM_Type_IV__FAM_1,RM_Type_IV__FAM_2",HO396_RS21635
+ordered_protein_RM_Type_I_4,RM,RM_Type_I,Defense,WP_001063206.1,WP_000981380.1,WP_001063206.1,2,"RM__Type_I_MTases_FAM_2,RM__Type_I_REases_FAM_2.einsi_trimmed",HO396_RS21660
+ordered_protein_RM_Type_I_4,RM,RM_Type_I,Defense,WP_001063206.1,WP_000981380.1,WP_000981380.1,2,"RM__Type_I_MTases_FAM_2,RM__Type_I_REases_FAM_2.einsi_trimmed",HO396_RS21665

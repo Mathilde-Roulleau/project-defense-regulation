@@ -1,0 +1,10 @@
+sys_id,type,subtype,activity,sys_beg,sys_end,protein_in_syst,genes_count,name_of_profiles_in_sys,Geneid
+ordered_protein_Pseudo-CoCoNut_5,CoCoNut,Pseudo-CoCoNut,Defense,WP_001178632.1,WP_000766172.1,WP_001178632.1,2,"CoCoNut-Pseudo-CoCoNut__Pseudo_CnuB,CoCoNut-Pseudo-CoCoNut__Pseudo_CnuC",BF35_RS02635
+ordered_protein_Pseudo-CoCoNut_5,CoCoNut,Pseudo-CoCoNut,Defense,WP_001178632.1,WP_000766172.1,WP_000766172.1,2,"CoCoNut-Pseudo-CoCoNut__Pseudo_CnuB,CoCoNut-Pseudo-CoCoNut__Pseudo_CnuC",BF35_RS02640
+ordered_protein_gcu233_6,gcu233,gcu233,Defense,WP_000497631.1,WP_000497631.1,WP_000497631.1,1,gcu233__gcu233,BF35_RS15260
+ordered_protein_DS-32_2,DS-32,DS-32,Defense,WP_000108179.1,WP_000718759.1,WP_000108179.1,2,"DS-32__DS-32A,DS-32__DS-32B",BF35_RS19815
+ordered_protein_DS-32_2,DS-32,DS-32,Defense,WP_000108179.1,WP_000718759.1,WP_000718759.1,2,"DS-32__DS-32A,DS-32__DS-32B",BF35_RS19820
+ordered_protein_AbiAlpha_1,AbiAlpha,AbiAlpha,Defense,WP_000661377.1,WP_000661377.1,WP_000661377.1,1,AbiAlpha__AbiAlpha,BF35_RS27545
+ordered_protein_NLR_like_bNACHT01_4,NLR,NLR_like_bNACHT01,Defense,WP_001127760.1,WP_001127760.1,WP_001127760.1,1,NLR_like_bNACHT01__NLR_like_bNACHT01,BF35_RS20305
+ordered_protein_Lamassu-Cap4_nuclease_3,Lamassu-Fam,Lamassu-Cap4_nuclease,Defense,WP_000250886.1,WP_002021779.1,WP_000250886.1,2,"Lamassu-Fam__LmuA_effector_Cap4_nuclease_II,Lamassu-Fam__LmuB_SMC_Hydrolase_protease",BF35_RS25925
+ordered_protein_Lamassu-Cap4_nuclease_3,Lamassu-Fam,Lamassu-Cap4_nuclease,Defense,WP_000250886.1,WP_002021779.1,WP_002021779.1,2,"Lamassu-Fam__LmuA_effector_Cap4_nuclease_II,Lamassu-Fam__LmuB_SMC_Hydrolase_protease",BF35_RS25935

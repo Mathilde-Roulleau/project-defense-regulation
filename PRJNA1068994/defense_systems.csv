@@ -1,0 +1,12 @@
+sys_id,type,subtype,activity,sys_beg,sys_end,protein_in_syst,genes_count,name_of_profiles_in_sys,Geneid
+ordered_protein_CoCoNut_I-B_4,CoCoNut,CoCoNut_I-B,Defense,WP_011274427.1,WP_031796873.1,WP_011274427.1,3,"CoCoNut-I-B__I-B_CnuA,CoCoNut-I-B__I-B_CnuB,CoCoNut-I-B__I-B_CnuC",EQW00_RS00170
+ordered_protein_CoCoNut_I-B_4,CoCoNut,CoCoNut_I-B,Defense,WP_011274427.1,WP_031796873.1,WP_078069838.1,3,"CoCoNut-I-B__I-B_CnuA,CoCoNut-I-B__I-B_CnuB,CoCoNut-I-B__I-B_CnuC",EQW00_RS00175
+ordered_protein_CoCoNut_I-B_4,CoCoNut,CoCoNut_I-B,Defense,WP_011274427.1,WP_031796873.1,WP_031796873.1,3,"CoCoNut-I-B__I-B_CnuA,CoCoNut-I-B__I-B_CnuB,CoCoNut-I-B__I-B_CnuC",EQW00_RS00180
+ordered_protein_RM_Type_I_6,RM,RM_Type_I,Defense,WP_083553769.1,WP_083553771.1,WP_083553769.1,3,"RM__Type_I_MTases_FAM_0,RM__Type_I_REases_FAM_0.einsi_trimmed,RM__Type_I_S_06",EQW00_RS00240
+ordered_protein_RM_Type_I_6,RM,RM_Type_I,Defense,WP_083553769.1,WP_083553771.1,WP_083553770.1,3,"RM__Type_I_MTases_FAM_0,RM__Type_I_REases_FAM_0.einsi_trimmed,RM__Type_I_S_06",EQW00_RS00245
+ordered_protein_RM_Type_I_6,RM,RM_Type_I,Defense,WP_083553769.1,WP_083553771.1,WP_083553771.1,3,"RM__Type_I_MTases_FAM_0,RM__Type_I_REases_FAM_0.einsi_trimmed,RM__Type_I_S_06",EQW00_RS00250
+ordered_protein_CBASS_I_3,CBASS,CBASS_I,Defense,WP_083553772.1,WP_244307884.1,WP_083553772.1,2,"CBASS__2TM_Gros,CBASS__Cyclase_new",EQW00_RS00255
+ordered_protein_CBASS_I_3,CBASS,CBASS_I,Defense,WP_083553772.1,WP_244307884.1,WP_244307884.1,2,"CBASS__2TM_Gros,CBASS__Cyclase_new",EQW00_RS00260
+ordered_protein_RM_Type_II_7,RM,RM_Type_II,Defense,WP_021298779.1,WP_021298778.1,WP_021298779.1,2,"RM_Type_II__Type_II_MTases_FAM_22,RM_Type_II__Type_II_REase34",EQW00_RS02485
+ordered_protein_RM_Type_II_7,RM,RM_Type_II,Defense,WP_021298779.1,WP_021298778.1,WP_021298778.1,2,"RM_Type_II__Type_II_MTases_FAM_22,RM_Type_II__Type_II_REase34",EQW00_RS02490
+ordered_protein_Abi2_1,Abi2,Abi2,Defense,WP_002437151.1,WP_002437151.1,WP_002437151.1,1,Abi2__Abi_2,EQW00_RS11765

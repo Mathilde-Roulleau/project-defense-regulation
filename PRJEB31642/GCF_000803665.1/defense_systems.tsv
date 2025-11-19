@@ -1,0 +1,8 @@
+sys_id	type	subtype	activity	sys_beg	sys_end	protein_in_syst	genes_count	name_of_profiles_in_sys
+ordered_protein_RM_Type_IV_6	RM	RM_Type_IV	Defense	WP_000283853.1	WP_000283853.1	WP_000283853.1	1	RM_Type_IV__Type_IV_05
+ordered_protein_Pseudo-CoCoNut_3	CoCoNut	Pseudo-CoCoNut	Defense	WP_000766196.1	WP_001178736.1	WP_000766196.1,WP_001178736.1	2	CoCoNut-Pseudo-CoCoNut__Pseudo_CnuB,CoCoNut-Pseudo-CoCoNut__Pseudo_CnuC
+ordered_protein_gcu233_4	gcu233	gcu233	Defense	WP_000497612.1	WP_000497612.1	WP_000497612.1	1	gcu233__gcu233
+ordered_protein_gcu233_5	gcu233	gcu233	Defense	WP_000020440.1	WP_000020440.1	WP_000020440.1	1	gcu233__gcu233
+ordered_protein_AbiO_1	AbiO	AbiO	Defense	WP_000802626.1	WP_000802626.1	WP_000802626.1	1	AbiO__AbiO
+ordered_protein_CAS_Class1-Subtype-I-C_7	Cas	CAS_Class1-Subtype-I-C	Defense	WP_021728789.1	WP_000853368.1	WP_021728789.1,WP_003319726.1,WP_021728790.1,WP_000853368.1	4	cas3_I_5,cas5_I-C_11,cas7_I-C_13,cas8c_I-C_2
+ordered_protein_DarTG_2	DarTG	DarTG	Defense	WP_021728420.1	WP_000555978.1	WP_021728420.1,WP_000555978.1	2	DarTG__DarG,DarTG__DarT

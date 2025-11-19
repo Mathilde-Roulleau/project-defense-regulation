@@ -1,0 +1,4 @@
+sys_id	type	subtype	activity	sys_beg	sys_end	protein_in_syst	genes_count	name_of_profiles_in_sys
+ordered_protein_MazEF_2	MazEF	MazEF	Defense	WP_000581937.1	WP_000254738.1	WP_000581937.1,WP_000254738.1	2	MazEF__MazE,MazEF__MazF
+ordered_protein_AbiE_1	AbiE	AbiE	Defense	WP_047085429.1	WP_172808160.1	WP_047085429.1,WP_172808160.1	2	AbiEii__AbiEi_3,AbiEii__AbiEii
+ordered_protein_MazEF_3	MazEF	MazEF	Defense	WP_000239579.1	WP_001223212.1	WP_000239579.1,WP_001223212.1	2	MazEF__MazE,MazEF__MazF
