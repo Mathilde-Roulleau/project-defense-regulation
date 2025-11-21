@@ -1,0 +1,371 @@
+---
+title: "PRJNA307603"
+output: html_notebook
+---
+
+
+LOADING PACKAGES
+
+```{r}
+library("DESeq2")
+library(dplyr)
+library(stringr)
+library(apeglm)
+library(ggplot2)
+library("EnhancedVolcano")
+library("tidyr")
+library(edgeR)
+library(patchwork)
+library(Biostrings)
+library("seqinr")
+library(vegan)
+library(ape)
+library(tibble)
+library(patchwork)
+```
+
+LOADING FILES
+
+```{r}
+# load metadata
+SRRs <- read.csv("metadata.csv", header = TRUE)
+SRRs <- SRRs %>%
+  mutate(State = ifelse(str_detect(strain, "P3"), "infected", "control"),
+         time = as.numeric(str_remove_all(time_point, " min post infection")))
+
+SRRs <- SRRs %>%
+  group_by(time_point, State) %>%
+  mutate(rep = row_number()) %>%
+  ungroup() %>%
+  mutate(time_rep = paste0(State, "_", time, "_", rep))
+
+
+# load gene counts for each run
+cts <- read.table("../counts_batch1.tsv", header = TRUE)
+names(cts)[names(cts) == "run_accession"] <- "Run"
+
+# select runs from PRJNA307603
+cts <- cts %>% filter(Run %in% SRRs$Run) %>%
+  mutate(Gene_origin = ifelse(grepl("^CP", Chr), "Bacteria", "Phage"))
+cts$Geneid <- sub("^cds-", "", cts$Geneid)
+cts$Geneid <- sub("^rna-", "", cts$Geneid)
+
+# they switched Bacteria and Phage genes in SRR3084371
+#cts[(cts$Run == "SRR3084371" & cts$Gene_origin == "Phage"),]$Gene_origin <- "Bacteria"
+#cts[(cts$Run == "SRR3084371" & cts$Gene_origin == "Bacteria"),]$Gene_origin <- "Phage"
+
+# load defense systems of the bacteria obtained from defense finder
+ds <- read.csv("defense_systems.csv", header = TRUE)[, c("Geneid", "protein_in_syst", "type")]
+```
+
+
+EDA
+
+```{r}
+# Number of bacterial and phage gene counts per run
+cts_per_run_b_p <- cts %>%
+  left_join(SRRs, by = "Run") # join with SRR to get the condition to label
+
+cts_per_run_b_p <- cts_per_run_b_p %>%
+  group_by(time_rep, Gene_origin) %>%
+  summarise(counts = sum(counts), .groups = "drop") %>%
+  as.data.frame()
+```
+
+
+```{r}
+# Plots bacteria and phage gene counts per run 
+ggplot(cts_per_run_b_p, aes(x = time_rep, y = counts, fill = Gene_origin)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8)) +
+  scale_fill_manual(values = c("Phage" = "red", "Bacteria" = "darkblue")) +
+  theme_minimal() +
+  labs(
+    x = "Run",
+    y = "# reads",
+    fill = "Gene origin"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 90) 
+)
+```
+
+```{r}
+# Construction of a distance matrix for PCoA
+dist_matrix_cts <- cts[c("Run", "Geneid", 'counts')] %>%
+  group_by(Run, Geneid) %>%
+  pivot_wider(
+    names_from = Run,
+    values_from = counts, 
+    values_fill = 0
+  ) %>%
+  as.data.frame()
+
+rownames(dist_matrix_cts) <- dist_matrix_cts$Geneid
+dist_matrix_cts <- dist_matrix_cts[ , -1]
+
+dist_matrix_cts <- vegdist(t(dist_matrix_cts), method = "euclidean")
+
+# Compute principal coordinate decomposition
+pcoa <- pcoa(dist_matrix_cts)
+
+# Plot PCoA2 vs PCoA2
+pcoa_df <- data.frame(
+  Run = rownames(pcoa$vectors),
+  Axis1 = pcoa$vectors[, 1],
+  Axis2 = pcoa$vectors[, 2]
+)
+pcoa_df <- left_join(pcoa_df, SRRs, by = "Run")
+pcoa_df <- pcoa_df %>%
+  mutate(
+    label = paste0(ifelse(State == "infected", "I", "C"), " ", time)
+  )
+
+ggplot(pcoa_df, aes(x = Axis1, y = Axis2, color = State, label = label)) +
+  geom_point(size = 4) +
+  geom_text(vjust = -0.8, size = 3.5, color = "black") +
+  scale_color_manual(
+    values = c("infected" = "red",  
+               "control" = "darkblue")   
+  ) +
+  theme_minimal() +
+  labs(
+    x = paste0("PCoA 1 (", round(pcoa$values$Relative_eig[1] * 100, 1), "%)"),
+    y = paste0("PCoA 2 (", round(pcoa$values$Relative_eig[2] * 100, 1), "%)"),
+    color = "Condition")
+```
+
+COUNT MATRIX
+
+```{r}
+cnt_matrix <- cts[cts$Gene_origin == "Bacteria", ] %>% 
+# filter bacteria genes   
+left_join(SRRs, by = "Run") %>%   
+  mutate(condition = paste(State, time_rep, sep = "_")) %>%   
+  select(Geneid, condition, counts) %>%   
+  pivot_wider(names_from = condition,               
+              values_from = counts,               
+              values_fill = 0) %>%   
+  as.data.frame()  
+rownames(cnt_matrix) <- cnt_matrix$Geneid 
+cnt_matrix <- cnt_matrix[ , -1] 
+cnt_matrix <- cnt_matrix[, order(names(cnt_matrix))]
+```
+
+CLR
+
+```{r}
+# Add pseudocount to avoid counts = 0
+pseudocount <- min(cnt_matrix[cnt_matrix > 0])/10 
+# Transform the cts_matrix dataframe into a Deseq object
+dds_for_vst <- cnt_matrix + pseudocount
+
+dds_for_vst <- DESeqDataSetFromMatrix(round(dds_for_vst), as.data.frame(colnames(dds_for_vst)), design = ~ 1)
+# Apply a variance stabilizing transformation (VST) to the count data
+vst <- varianceStabilizingTransformation(dds_for_vst) %>%
+  assay() %>%
+  as.data.frame()
+
+vst <- 2^(vst)
+
+# Normalization by gene length
+genes_length <- cts[match(intersect(rownames(vst), cts$Geneid), cts$Geneid), ]$Length
+vst <- vst/(genes_length * 10^(-3))
+
+# Centered Log2 Ratio (CLR)
+clr <- log2(vst / exp(rowMeans(log(vst))))
+```
+
+```{r}
+plot_CLR <- function(protein, ds_type) {
+  protein_clr <- clr[protein, ]
+
+  protein_clr <- protein_clr %>%
+    t() %>%
+    as.data.frame() %>%
+    rename(value = protein) %>%
+    rownames_to_column("condition_time_rep") %>%
+    separate(condition_time_rep, into = c("condition", "time_rep"), sep = "_") %>%
+    separate(time_rep, into = c("time", "rep"), sep = "-") %>%
+    mutate(time = as.numeric(time))
+
+  # compute mean and se
+  median_clr <- protein_clr %>%
+    group_by(condition, time) %>%
+    summarise(
+      median = median(value, na.rm = TRUE),
+      sd = sd(value, na.rm = TRUE), 
+      .groups = "keep"
+    )
+
+  # Plot
+  ggplot(median_clr, aes(x = time, y = median, color = condition, group = condition)) +
+    geom_errorbar(aes(ymin = median-sd, ymax = median+sd)) +
+    geom_line(size = 1.2) +
+    geom_point(size = 3) +
+    theme_minimal() +
+    scale_color_manual(
+    values = c("infected" = "red",  
+               "control" = "darkblue")   
+    ) +
+    ylim(-1.2, 1) +
+    labs(
+      title = paste("Defense system = ", ds_type),
+      x = "Time post infection (min)",
+      y = "CLR"
+    )
+}
+```
+
+```{r, fig.height=16, fig.width=20}
+plots <- list()
+
+for (i in rownames(ds)) {
+  plots[[i]] <- plot_CLR(ds[i, ]$protein_in_syst, ds[i, ]$type)
+}
+
+wrap_plots(plots[1:11], ncol = 4)
+```
+
+
+DESEQ + VOLCANO PLOT FUNCTION (control vs infected)
+
+```{r}
+deseq_volcano_c_i <- function(t) {
+  # columns of cnt_matrix to select
+  cols <- c(
+      paste0("control_", t, "-1"),
+      paste0("control_", t, "-2"),
+      paste0("control_", t, "-3"),
+      paste0("infected_", t, "-1"),
+      paste0("infected_", t, "-2"),
+      paste0("infected_", t, "-3")
+    )
+  
+  # construction of DESeq dataset
+  coldata <- data.frame(
+    row.names = cols,
+    condition = factor(c("control", "control", "control", "infected", "infected", "infected"))
+  )
+  
+  countData <- round(cnt_matrix[,cols])
+  
+  dds <- DESeqDataSetFromMatrix(countData = countData,
+                                colData = coldata,
+                                design = ~ condition)
+  
+  # differential expression analysis
+  dds <- DESeq(dds)
+  res <- as.data.frame(results(dds, alpha = 0.1, pAdjustMethod = "fdr"))
+  
+  # label for defense genes 
+  labels <- rownames(res) %>%
+    as.data.frame() %>%
+    `colnames<-`("protein_in_syst") %>%
+    left_join(ds, by = "protein_in_syst") %>%
+    mutate(label = ifelse(is.na(type), "", type)) %>%
+    pull(label)
+  
+  # add column labels (character and logical)
+  res <- mutate(res, label=labels)
+  res <- mutate(res, ds = factor(res$label != ""))
+  
+  # plot -Log10 FDR vs Log fold change
+  plot <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = ds)) +
+    geom_point(data = subset(res, ds == "FALSE"), color = "grey", alpha = 0.3) +
+    geom_point(data = subset(res, ds == "TRUE"), color = "darkgreen") +
+    geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black") +
+    geom_label_repel(data = subset(res, ds == "TRUE" & padj < 0.05),
+        aes(label = label), 
+        size = 3, 
+        max.overlaps = Inf, 
+        show.legend = NA,
+        colour = "black"
+  ) +
+    xlim(-7, 7) +
+    ylim(0, 30) +
+    annotate("text", x=-2, y=30, label = paste0("Time after infection = ",t, " min")) +
+    theme_bw()
+
+
+  return(plot)
+}
+```
+
+```{r}
+plot15 <- deseq_volcano_c_i(15) 
+plot60 <- deseq_volcano_c_i(60) 
+
+plot15 + plot60 + plot_layout(nrow = 1) 
+```
+
+DESEQ + VOLCANO PLOT FUNCTION (time 0 vs 60)
+
+```{r}
+deseq_volcano_0_60 <- function(State) {
+  # columns of cnt_matrix to select
+  cols <- c(
+      paste0("control_0-1"),
+      paste0("control_0-2"),
+      paste0("control_0-3"),
+      paste0(State, "_60-1"),
+      paste0(State, "_60-2"),
+      paste0(State, "_60-3")
+    )
+  
+  # construction of DESeq dataset
+  coldata <- data.frame(
+    row.names = cols,
+    condition = factor(c("0", "0", "0", "60", "60", "60"))
+  )
+  
+  countData <- round(cnt_matrix[,cols])
+  
+  dds <- DESeqDataSetFromMatrix(countData = countData,
+                                colData = coldata,
+                                design = ~ condition)
+  
+  # differential expression analysis
+  dds <- DESeq(dds)
+  res <- as.data.frame(results(dds, alpha = 0.1, pAdjustMethod = "fdr"))
+  
+  # label for defense genes 
+  labels <- rownames(res) %>%
+    as.data.frame() %>%
+    `colnames<-`("protein_in_syst") %>%
+    left_join(ds, by = "protein_in_syst") %>%
+    mutate(label = ifelse(is.na(type), "", type)) %>%
+    pull(label)
+  
+  # add column labels (character and logical)
+  res <- mutate(res, label=labels)
+  res <- mutate(res, ds = factor(res$label != ""))
+  
+  # plot -Log10 FDR vs Log fold change
+  plot <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = ds)) +
+    geom_point(data = subset(res, ds == "FALSE"), color = "grey", alpha = 0.3) +
+    geom_point(data = subset(res, ds == "TRUE"), color = "darkgreen") +
+    geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black") +
+    geom_label_repel(data = subset(res, ds == "TRUE" & padj < 0.05),
+        aes(label = label), 
+        size = 3, 
+        max.overlaps = Inf, 
+        show.legend = NA,
+        colour = "black"
+  ) +
+    xlim(-7, 7) +
+    ylim(0, 30) +
+    annotate("text", x=-2, y=30, label = paste0("0min VS 60min - ", State)) +
+    theme_bw()
+
+
+  return(plot)
+}
+```
+
+```{r}
+plot_control <- deseq_volcano_0_60("control")
+plot_infected <- deseq_volcano_0_60("infected")
+
+plot_control + plot_infected + plot_layout(nrow = 1) 
+```
+

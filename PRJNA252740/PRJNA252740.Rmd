@@ -163,18 +163,21 @@ plot_CLR <- function(protein, ds_type) {
       median = median(value, na.rm = TRUE),
       sd = sd(value, na.rm = TRUE), 
       .groups = "keep"
-    )
-  print(median_clr)
+    ) %>%
+    mutate(time = factor(time, levels = c("Uninfected",
+                                        "Early Infection",
+                                        "Middle Infection",
+                                        "Late Infection"))) %>%
+    arrange(time)
   # Plot
-  ggplot(median_clr, aes(x = time, y = median)) +
+  ggplot(median_clr, aes(x = time, y = median, group = 1)) +
     geom_errorbar(aes(ymin = median-sd, ymax = median+sd)) +
     geom_line(size = 1.2) +
     geom_point(size = 3) +
     theme_minimal() +
-    #ylim(-1.2, 1) +
+    ylim(-10, 16) +
     labs(
       title = paste("Defense system = ", ds_type),
-      x = "Time post infection (min)",
       y = "CLR"
     )
 }
@@ -188,7 +191,6 @@ for (i in rownames(ds)) {
 }
 
 wrap_plots(plots[1:5], ncol = 3)
-plot_CLR(ds[1, ]$protein_in_syst, ds[1, ]$type)
 ```
 
 
@@ -197,20 +199,31 @@ DESEQ + VOLCANO PLOT FUNCTION (control vs infected)
 ```{r}
 deseq_volcano_c_i <- function(t) {
   # columns of cnt_matrix to select
-  cols <- c(
-      paste0("control_", t, "-1"),
-      paste0("control_", t, "-2"),
-      paste0("control_", t, "-3"),
-      paste0("infected_", t, "-1"),
-      paste0("infected_", t, "-2"),
-      paste0("infected_", t, "-3")
-    )
+  if(t == "Early Infection"){
+    cols <- c("Uninfected_1", "Uninfected_2",
+        paste0(t, "_1"),
+        paste0(t, "_2")
+      )      
+  } else {
+    cols <- c("Uninfected_1", "Uninfected_2",
+        paste0(t, "_1"),
+        paste0(t, "_2"),
+        paste0(t, "_3"), 
+        paste0(t, "_4")
+      )    
+  }
+    
   
   # construction of DESeq dataset
-  coldata <- data.frame(
-    row.names = cols,
-    condition = factor(c("control", "control", "control", "infected", "infected", "infected"))
-  )
+  if(t == "Early Infection"){
+    coldata <- data.frame(
+      row.names = cols,
+      condition = factor(c("control", "control", "infected", "infected")))     
+  } else {
+    coldata <- data.frame(
+      row.names = cols,
+      condition = factor(c("control", "control", "infected", "infected", "infected", "infected")))   
+  }
   
   countData <- round(cnt_matrix[,cols])
   
@@ -246,9 +259,9 @@ deseq_volcano_c_i <- function(t) {
         show.legend = NA,
         colour = "black"
   ) +
-    xlim(-7, 7) +
-    ylim(0, 30) +
-    annotate("text", x=-2, y=30, label = paste0("Time after infection = ",t, " min")) +
+    xlim(-30, 30) +
+    ylim(0, 10) +
+    annotate("text", x=-2, y=30, label = paste0("Uninfected VS ", t)) +
     theme_bw()
 
 
@@ -257,80 +270,12 @@ deseq_volcano_c_i <- function(t) {
 ```
 
 ```{r}
-plot15 <- deseq_volcano_c_i(15) 
-plot60 <- deseq_volcano_c_i(60) 
+plot1 <- deseq_volcano_c_i("Early Infection") 
+plot2 <- deseq_volcano_c_i("Middle Infection") 
+plot3 <- deseq_volcano_c_i("Late Infection") 
 
-plot15 + plot60 + plot_layout(nrow = 1) 
+plot1 + plot2 + plot3 + plot_layout(nrow = 1) 
 ```
 
-DESEQ + VOLCANO PLOT FUNCTION (time 0 vs 60)
 
-```{r}
-deseq_volcano_0_60 <- function(State) {
-  # columns of cnt_matrix to select
-  cols <- c(
-      paste0("control_0-1"),
-      paste0("control_0-2"),
-      paste0("control_0-3"),
-      paste0(State, "_60-1"),
-      paste0(State, "_60-2"),
-      paste0(State, "_60-3")
-    )
-  
-  # construction of DESeq dataset
-  coldata <- data.frame(
-    row.names = cols,
-    condition = factor(c("0", "0", "0", "60", "60", "60"))
-  )
-  
-  countData <- round(cnt_matrix[,cols])
-  
-  dds <- DESeqDataSetFromMatrix(countData = countData,
-                                colData = coldata,
-                                design = ~ condition)
-  
-  # differential expression analysis
-  dds <- DESeq(dds)
-  res <- as.data.frame(results(dds, alpha = 0.1, pAdjustMethod = "fdr"))
-  
-  # label for defense genes 
-  labels <- rownames(res) %>%
-    as.data.frame() %>%
-    `colnames<-`("protein_in_syst") %>%
-    left_join(ds, by = "protein_in_syst") %>%
-    mutate(label = ifelse(is.na(type), "", type)) %>%
-    pull(label)
-  
-  # add column labels (character and logical)
-  res <- mutate(res, label=labels)
-  res <- mutate(res, ds = factor(res$label != ""))
-  
-  # plot -Log10 FDR vs Log fold change
-  plot <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = ds)) +
-    geom_point(data = subset(res, ds == "FALSE"), color = "grey", alpha = 0.3) +
-    geom_point(data = subset(res, ds == "TRUE"), color = "darkgreen") +
-    geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black") +
-    geom_label_repel(data = subset(res, ds == "TRUE" & padj < 0.05),
-        aes(label = label), 
-        size = 3, 
-        max.overlaps = Inf, 
-        show.legend = NA,
-        colour = "black"
-  ) +
-    xlim(-7, 7) +
-    ylim(0, 30) +
-    annotate("text", x=-2, y=30, label = paste0("0min VS 60min - ", State)) +
-    theme_bw()
-
-
-  return(plot)
-}
-```
-
-```{r}
-plot_control <- deseq_volcano_0_60("control")
-plot_infected <- deseq_volcano_0_60("infected")
-
-plot_control + plot_infected + plot_layout(nrow = 1) 
-```
 

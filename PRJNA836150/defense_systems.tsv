@@ -1,8 +1,4 @@
 sys_id	type	subtype	activity	sys_beg	sys_end	protein_in_syst	genes_count	name_of_profiles_in_sys
-ordered_protein_RM_Type_III_7	RM	RM_Type_III	Defense	WP_416350033.1	WP_416350037.1	WP_416350033.1,WP_416350034.1,WP_416350036.1,WP_416350037.1	4	RM_Type_III__Type_III_MTases_FAM_0,RM_Type_III__Type_III_MTases_FAM_0,RM_Type_III__Type_III_REases_FAM_1.einsi_trimmed,RM_Type_III__Type_III_REases_FAM_1.einsi_trimmed
-ordered_protein_Gabija_2	Gabija	Gabija	Defense	WP_416350038.1	WP_416350389.1	WP_416350038.1,WP_416350389.1	2	Gabija__GajA,Gabija__GajB_2
-ordered_protein_Nhi_4	Nhi	Nhi	Defense	WP_218706884.1	WP_218706884.1	WP_218706884.1	1	Nhi__Nhi
-ordered_protein_RosmerTA_5	RosmerTA	RosmerTA	Defense	WP_218708502.1	WP_416350137.1	WP_218708502.1,WP_416350137.1	2	RosmerTA__RmrA_2603008502,RosmerTA__RmrT_2603008502
-ordered_protein_Gabija_3	Gabija	Gabija	Defense	WP_416350292.1	WP_416350293.1	WP_416350292.1,WP_416350293.1	2	Gabija__GajA,Gabija__GajB_1
-ordered_protein_Abi2_1	Abi2	Abi2	Defense	WP_214269660.1	WP_214269660.1	WP_214269660.1	1	Abi2__Abi_2
-ordered_protein_SEFIR_6	SEFIR	SEFIR	Defense	WP_416350411.1	WP_416350411.1	WP_416350411.1	1	SEFIR__bSEFIR
+ordered_protein_CAS_Class2-Subtype-II-A_3	Cas	CAS_Class2-Subtype-II-A	Defense	WP_182093637.1	WP_182093639.1	WP_182093637.1,WP_261797315.1,WP_182093638.1,WP_182093639.1	4	cas1_I_II_III_IV_V_VI_5,cas2_I_II_III_IV_V_VI_6,cas9_II-A_II-B_II-C_1,csn2_II-A_10
+ordered_protein_Bunzi_2	Bunzi	Bunzi	Defense	WP_107556517.1	WP_107556516.1	WP_107556517.1,WP_107556516.1	2	Bunzi__BnzA,Bunzi__BnzB
+ordered_protein_Abi2_1	Abi2	Abi2	Defense	WP_182093675.1	WP_182093675.1	WP_182093675.1	1	Abi2__Abi_2
