@@ -2,33 +2,17 @@
 title: "PRJNA787900_SH1000"
 output: html_notebook
 ---
-
-
 LOADING PACKAGES
 
 ```{r}
-library("DESeq2")
-library(dplyr)
-library(stringr)
-library(apeglm)
-library(ggplot2)
-library("EnhancedVolcano")
-library("tidyr")
-library(edgeR)
-library(patchwork)
-library(Biostrings)
-library("seqinr")
-library(vegan)
-library(ape)
-library(tibble)
-library(patchwork)
+source("../load_packages.R")
 ```
 
 LOADING FILES
 
 ```{r}
-# load metadata
-SRRs <- read.csv("metadata.csv", header = TRUE)
+source("../../load_files.R")
+
 SRRs <- SRRs[SRRs$strain == "SH1000",]
 SRRs <- SRRs %>%
   mutate(time_point = case_when(
@@ -46,58 +30,24 @@ SRRs <- SRRs %>%
   ungroup() %>%
   mutate(condition = paste0(time_point, "_", State, "_", rep))
 
-# load gene counts for each run
-cts <- read.table("../../counts_batch1.tsv", header = TRUE)
-names(cts)[names(cts) == "run_accession"] <- "Run"
-
-# select runs from PRJNA787900
 cts <- cts %>%
-  filter(Run %in% SRRs$Run) %>%
-  mutate(Gene_origin = ifelse(
-    grepl("^NZ", Chr),
-    "Bacteria",
-    "Phage"
-  ))
-
-cts$Geneid <- sub("^cds-", "", cts$Geneid)
-cts$Geneid <- sub("^rna-", "", cts$Geneid)
-
-# load defense systems of the bacteria obtained from defense finder
-ds <- read.csv("defense_systems.csv", header = TRUE)[, c("Geneid", "protein_in_syst", "type")]
+  filter(Run %in% SRRs$Run)
 ```
-
-
-EDA
-
-```{r}
-# Number of bacterial and phage gene counts per run
-cts_per_run_b_p <- cts %>%
-  left_join(SRRs, by = "Run") # join with SRR to get the condition to label
-
-cts_per_run_b_p <- cts_per_run_b_p %>%
-  group_by(condition, Gene_origin) %>%
-  summarise(counts = sum(counts), .groups = "drop") %>%
-  as.data.frame()
-colnames(cts_per_run_b_p)[colnames(cts_per_run_b_p) == "Library.Name"] <- "Run"
-```
-
 
 
 ```{r}
-# Plots bacteria and phage gene counts per run 
-ggplot(cts_per_run_b_p, aes(x = condition, y = counts, fill = Gene_origin)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.8)) +
-  scale_fill_manual(values = c("Phage" = "red", "Bacteria" = "darkblue")) +
-  theme_minimal() +
-  labs(
-    x = "Run",
-    y = "# reads",
-    fill = "Gene origin"
-  ) +
-  theme(
-    axis.text.x = element_text(angle = 90) 
-)
+# Create count matrices for all genes + bacterial genes + phage genes
+source("../../count_matrices.R")
+
+# Quality control steps
+source("../../qc_steps.R")
 ```
+```{r, fig.height=22, fig.width=20}
+source("../../CLR.R")
+source("../../CLR_control.R")
+wrap_plots(plots, ncol = 3)
+```
+
 
 ```{r}
 # Construction of a distance matrix for PCoA
@@ -136,161 +86,13 @@ ggplot(pcoa_df, aes(x = Axis1, y = Axis2, color = time, label = time)) +
     color = "Condition")
 ```
 
-COUNT MATRIX
-
+COMPUTE CORRELATION BETWEEN DEFENSE SYSTEMS EXPRESSION AND BACTERIAL GROWTH / PHAGE GROWTH
 ```{r}
-cnt_matrix <- cts[cts$Gene_origin == "Bacteria", ] %>% 
-# filter bacteria genes   
-left_join(SRRs, by = "Run") %>%   
-  select(Geneid, condition, counts) %>%   
-  pivot_wider(names_from = condition,               
-              values_from = counts,               
-              values_fill = 0) %>%   
-  as.data.frame()  
-rownames(cnt_matrix) <- cnt_matrix$Geneid 
-cnt_matrix <- cnt_matrix[ , -1] 
-cnt_matrix <- cnt_matrix[, order(names(cnt_matrix))]
-```
+source("../../correlation_ds_growth.R")
 
-CLR
-
-```{r}
-# Add pseudocount to avoid counts = 0
-pseudocount <- min(cnt_matrix[cnt_matrix > 0])/10 
-# Transform the cts_matrix dataframe into a Deseq object
-dds_for_vst <- cnt_matrix + pseudocount
-
-dds_for_vst <- DESeqDataSetFromMatrix(round(dds_for_vst), as.data.frame(colnames(dds_for_vst)), design = ~ 1)
-# Apply a variance stabilizing transformation (VST) to the count data
-vst <- varianceStabilizingTransformation(dds_for_vst) %>%
-  assay() %>%
-  as.data.frame()
-
-vst <- 2^(vst)
-
-# Normalization by gene length
-genes_length <- cts[match(intersect(rownames(vst), cts$Geneid), cts$Geneid), ]$Length
-vst <- vst/(genes_length * 10^(-3))
-
-# Centered Log2 Ratio (CLR)
-clr <- log2(vst / exp(rowMeans(log(vst))))
-```
-
-```{r}
-plot_CLR <- function(protein, ds_type) {
-  protein_clr <- clr[protein, ]
-
-  protein_clr <- protein_clr %>%
-    t() %>%
-    as.data.frame() %>%
-    rename(value = protein) %>%
-    rownames_to_column("time_State_rep") %>%
-    separate(time_State_rep, into = c("time", "State", "rep"), sep = "_") %>%
-    mutate(time = as.numeric(time))
-
-  # compute mean and se
-  median_clr <- protein_clr %>%
-    group_by(State, time) %>%
-    summarise(
-      median = median(value, na.rm = TRUE),
-      sd = sd(value, na.rm = TRUE), 
-      .groups = "keep"
-    )
-
-  # Plot
-  ggplot(median_clr, aes(x = time, y = median, color = State, group = State)) +
-    geom_errorbar(aes(ymin = median-sd, ymax = median+sd)) +
-    geom_line(size = 1.2) +
-    geom_point(size = 3) +
-    theme_minimal() +
-    scale_color_manual(
-    values = c("infected" = "red",  
-               "control" = "darkblue")   
-    ) +
-    ylim(-3.5, 3.5) +
-    labs(
-      title = paste("Defense system = ", ds_type),
-      x = "Time post infection (min)",
-      y = "CLR"
-    )
-}
-```
-
-```{r, fig.height=16, fig.width=20}
-plots <- list()
-
-for (i in rownames(ds)) {
-  plots[[i]] <- plot_CLR(ds[i, ]$protein_in_syst, ds[i, ]$type)
-}
-
-wrap_plots(plots[1:10], ncol = 4)
-```
-
-
-DESEQ + VOLCANO PLOT FUNCTION (control vs infected)
-
-```{r}
-deseq_volcano_c_i <- function(t) {
-  # columns of cnt_matrix to select
-  cols <- c("0_control_1", "0_control_2", "0_control_3",
-      paste0(t,"_infected_1"),
-      paste0(t,"_infected_2"),
-      paste0(t,"_infected_3")
-    )
-  
-  # construction of DESeq dataset
-  coldata <- data.frame(
-    row.names = cols,
-    condition = factor(c("control", "control", "control", "infected", "infected", "infected"))
-  )
-  
-  countData <- round(cnt_matrix[,cols])
-  
-  dds <- DESeqDataSetFromMatrix(countData = countData,
-                                colData = coldata,
-                                design = ~ condition)
-  
-  # differential expression analysis
-  dds <- DESeq(dds)
-  res <- as.data.frame(results(dds, alpha = 0.1, pAdjustMethod = "fdr"))
-  
-  # label for defense genes 
-  labels <- ds$type[match(rownames(res), ds$protein_in_syst)]
-  labels[is.na(labels)] <- ""
-  
-  # add column labels (character and logical)
-  res <- mutate(res, label=labels)
-  res <- mutate(res, ds = factor(res$label != ""))
-  
-  # plot -Log10 FDR vs Log fold change
-  plot <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = ds)) +
-    geom_point(data = subset(res, ds == "FALSE"), color = "grey", alpha = 0.3) +
-    geom_point(data = subset(res, ds == "TRUE"), color = "darkgreen") +
-    geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black") +
-    geom_label_repel(data = subset(res, ds == "TRUE" & padj < 0.05),
-        aes(label = label), 
-        size = 3, 
-        max.overlaps = Inf, 
-        show.legend = NA,
-        colour = "black"
-  ) +
-    xlim(-5, 5) +
-    ylim(0, 15) +
-    annotate("text", x=0, y=13, label = paste0(t, " min (C vs I)")) +
-    theme_bw()
-
-
-  return(plot)
-}
-```
-
-```{r}
-plot2 <- deseq_volcano_c_i(2) 
-plot5 <- deseq_volcano_c_i(5) 
-plot10 <- deseq_volcano_c_i(10) 
-plot20 <- deseq_volcano_c_i(20) 
-plot30 <- deseq_volcano_c_i(30) 
-
-plot2 + plot5 + plot10 + plot20 + plot30 + plot_layout(nrow = 2) 
+for (ds_ in unique(ds$type)) {
+    save_correlation(ds_, median_growth_markers_clr, "ribosome")
+    save_correlation(ds_, median_struct_phage_clr, "phage")
+  }
 ```
 

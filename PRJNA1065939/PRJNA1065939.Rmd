@@ -1,0 +1,93 @@
+---
+title: "PRJNA1065939"
+output: html_notebook
+---
+LOADING PACKAGES
+
+```{r}
+source("../load_packages.R")
+```
+
+LOADING FILES
+
+```{r}
+source("../load_files.R")
+
+SRRs <- SRRs %>%
+  mutate(time_point = as.numeric(str_remove_all(time_point, " min")), 
+         genotype = str_replace_all(genotype, "rpoC G17D", "mutant")) %>%
+  arrange(time_point)
+
+SRRs <- SRRs %>%
+  group_by(time_point, genotype) %>%
+  mutate(rep = row_number()) %>%
+  ungroup() %>%
+  mutate(condition = paste0(time_point, "_", genotype, "_", rep))
+```
+
+
+```{r}
+# Create count matrixes for all genes + bacterial genes+ phage genes
+source("../count_matrices.R")
+
+# Quality control steps
+source("../qc_steps.R")
+```
+
+CLR
+```{r, fig.height=30, fig.width=20}
+source("../CLR.R")
+source("../CLR_control.R")
+wrap_plots(plots, ncol = 3)
+```
+
+
+```{r}
+# Construction of a distance matrix for PCoA
+dist_matrix_clr <- vegdist(t(clr), method = "euclidean")
+
+# Compute principal coordinate decomposition
+pcoa_clr <- pcoa(dist_matrix_clr)
+
+# Plot PCoA2 vs PCoA2
+pcoa_df_clr <- data.frame(
+  condition = rownames(pcoa_clr$vectors),
+  Axis1 = pcoa_clr$vectors[, 1],
+  Axis2 = pcoa_clr$vectors[, 2]
+  )
+
+pcoa_df_clr <- left_join(pcoa_df_clr, SRRs, by = "condition")
+
+ggplot(pcoa_df_clr, aes(x = Axis1, y = Axis2, color = genotype, label = time_point)) +
+  geom_point(size = 4) +
+  geom_text(vjust = -0.8, size = 3.5, color = "black") +
+  scale_color_manual(values = c("mutant" = "red", "WT" = "blue")) +
+  theme_minimal() +
+  labs(
+    x = paste0("PCoA 1 (", round(pcoa_clr$values$Relative_eig[1] * 100, 1), "%)"),
+    y = paste0("PCoA 2 (", round(pcoa_clr$values$Relative_eig[2] * 100, 1), "%)"),
+    color = "Condition")
+```
+
+COMPUTE CORRELATION BETWEEN DEFENSE SYSTEMS EXPRESSION AND BACTERIAL GROWTH / PHAGE GROWTH
+```{r}
+source("../correlation_ds_growth.R")
+# NEED TO CHANGE THE SCRIPT TO NOT INCLUDE ALL THE SAMPLES AT TIME 0 (as we separate mutants from WT)
+genotype <- c("mutant", "WT")
+
+for (gen in genotype) {
+  for (ds_ in unique(ds$type)) {
+  save_correlation(ds_, median_growth_markers_clr, "ribosome", gen)
+  save_correlation(ds_, median_struct_phage_clr, "phage", gen)
+  }
+}
+```
+
+```{r}
+# combine both mutant AND WT
+
+for (ds_ in unique(ds$type)) {
+save_correlation(ds_, median_growth_markers_clr, "ribosome")
+save_correlation(ds_, median_struct_phage_clr, "phage")
+}
+```

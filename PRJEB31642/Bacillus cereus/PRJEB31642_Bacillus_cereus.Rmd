@@ -1,0 +1,91 @@
+---
+title: "PRJEB31642_Bacillus_cereus"
+output: html_notebook
+---
+LOADING PACKAGES
+
+```{r}
+source("../../load_packages.R")
+```
+
+LOADING FILES
+
+```{r}
+species <- "Bacillus cereus"
+strain <- "RSVF1 ATCC4342"
+phage <- "Bacilus phage Wbeta"
+phage_accession <- "GCF_000864445.1"
+# R script to modify
+source("../../load_files.R")
+
+SRRs <- SRRs %>%
+  mutate(Time = str_extract(Submitter_Id, "(?<=_t)\\d+"),
+         peptide = ifelse(str_detect(Submitter_Id, "with_pep"), TRUE, FALSE)) 
+SRRs <- SRRs %>%
+  group_by(Time) %>%
+  mutate(rep = row_number()) %>%
+  ungroup() %>%
+  mutate(condition = paste0(Time, "_", rep))
+```
+
+```{r}
+# Create count matrixes for all genes + bacterial genes+ phage genes
+source("../../count_matrices.R")
+
+# Quality control steps
+source("../../qc_steps.R")
+```
+
+CLR
+```{r, fig.height=7, fig.width=20}
+source("../../CLR.R")
+source("../../CLR_control.R")
+wrap_plots(plots, ncol = 3)
+```
+
+```{r}
+# Construction of a distance matrix for PCoA
+dist_matrix_cts <- cts[c("Run", "Geneid", 'counts')] %>%
+  group_by(Run, Geneid) %>%
+  pivot_wider(
+    names_from = Run,
+    values_from = counts, 
+    values_fill = 0
+  ) %>%
+  as.data.frame()
+
+rownames(dist_matrix_cts) <- dist_matrix_cts$Geneid
+dist_matrix_cts <- dist_matrix_cts[ , -1]
+
+dist_matrix_cts <- vegdist(t(dist_matrix_cts), method = "euclidean")
+
+# Compute principal coordinate decomposition
+pcoa <- pcoa(dist_matrix_cts)
+
+# Plot PCoA2 vs PCoA2
+pcoa_df <- data.frame(
+  Run = rownames(pcoa$vectors),
+  Axis1 = pcoa$vectors[, 1],
+  Axis2 = pcoa$vectors[, 2]
+)
+pcoa_df <- left_join(pcoa_df, SRRs, by = "Run")
+
+ggplot(pcoa_df, aes(x = Axis1, y = Axis2, color = Time, label = Time)) +
+  geom_point(size = 4) +
+  geom_text(vjust = -0.8, size = 3.5, color = "black") +
+  theme_minimal() +
+  labs(
+    x = paste0("PCoA 1 (", round(pcoa$values$Relative_eig[1] * 100, 1), "%)"),
+    y = paste0("PCoA 2 (", round(pcoa$values$Relative_eig[2] * 100, 1), "%)"))
+```
+
+COMPUTE CORRELATION BETWEEN DEFENSE SYSTEMS EXPRESSION AND BACTERIAL GROWTH / PHAGE GROWTH
+
+```{r}
+source("../../correlation_ds_growth.R")
+
+for (ds_ in unique(ds$type)) {
+  save_correlation(ds_, median_growth_markers_clr, "ribosome")
+  save_correlation(ds_, median_struct_phage_clr, "phage")
+}
+```

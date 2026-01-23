@@ -1,0 +1,9 @@
+gene	start	end	length	strand	gc_content	genetic_code	rbs_motif	marker	evalue	bitscore	uscg	plasmid_hallmark	virus_hallmark	taxid	taxname	annotation_conjscan	annotation_amr	annotation_accessions	annotation_description
+NC_001422.1_1	2	136	135	1	0.370	11	None	NA	NA	NA	0	0	0	1	NA	NA	NA	NA	NA
+NC_001422.1_2	133	393	261	1	0.418	11	3Base/5BMM	GENOMAD.169375.VV	6.142e-26	102	0	0	0	13799	Sinsheimervirus phiX174	NA	NA	PF12025	Phage protein C
+NC_001422.1_3	390	848	459	1	0.468	11	GGA/GAG/AGG	GENOMAD.067220.VV	4.753e-84	273	0	0	0	1534	Bullavirinae	NA	NA	PF02925	Bacteriophage scaffolding protein D
+NC_001422.1_4	848	964	117	1	0.496	11	AGGAG	NA	NA	NA	0	0	0	1	NA	NA	NA	NA	NA
+NC_001422.1_5	1001	2284	1284	1	0.449	11	GGAG/GAGG	GENOMAD.033662.VV	3.182e-269	823	0	0	1	1534	Bullavirinae	NA	NA	PF02305	Capsid protein (F protein)
+NC_001422.1_6	2395	2922	528	1	0.420	11	AGGAG	GENOMAD.145242.VV	3.289e-74	246	0	0	1	1534	Bullavirinae	NA	NA	PF02306	Major spike protein (G protein)
+NC_001422.1_7	2931	3917	987	1	0.451	11	GGAG/GAGG	GENOMAD.109387.VV	1.177e-169	530	0	0	0	13799	Sinsheimervirus phiX174	NA	NA	PF04687	Microvirus H protein (pilot protein)
+NC_001422.1_8	3981	5384	1404	1	0.455	11	GGAGG	GENOMAD.065430.VV	0.0	992	0	0	0	13799	Sinsheimervirus phiX174	NA	NA	NA	NA

@@ -5,7 +5,7 @@ import pandas as pd
 
 
 folders = [
-    "C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA836150",
+    "C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJEB31642/Bacillus cereus/defense_finder",
 ]
 
 

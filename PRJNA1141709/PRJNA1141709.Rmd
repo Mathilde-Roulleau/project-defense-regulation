@@ -1,0 +1,97 @@
+---
+title: "PRJNA1141709"
+output: html_notebook
+---
+LOADING PACKAGES
+
+```{r}
+source("../load_packages.R")
+```
+
+LOADING FILES
+
+```{r}
+source("../load_files.R")
+
+# omv = outer membrane vesicle
+# wc = whole cell 
+SRRs <- SRRs %>%
+  mutate(
+    isolate = if_else(str_starts(Sample.Name, "OMV"), "omv", "wc"),
+    state   = if_else(str_ends(Sample.Name, "MINUS"), "control", "infected"), 
+    condition = paste0(isolate, "_", state)
+  )
+```
+
+```{r}
+# Create count matrixes for all genes + bacterial genes+ phage genes
+source("../count_matrices.R")
+
+# Quality control steps
+source("../qc_steps.R")
+```
+```{r}
+# sum of omv and wc counts for analysis
+cnt_matrix <- data.frame(
+  control  = cnt_matrix$omv_control  + cnt_matrix$wc_control,
+  infected = cnt_matrix$omv_infected + cnt_matrix$wc_infected,
+  row.names = rownames(cnt_matrix)
+)
+
+cnt_matrix_bacteria <- data.frame(
+  control  = cnt_matrix_bacteria$omv_control  + cnt_matrix_bacteria$wc_control,
+  infected = cnt_matrix_bacteria$omv_infected + cnt_matrix_bacteria$wc_infected,
+  row.names = rownames(cnt_matrix_bacteria)
+)
+
+cnt_matrix_phage <- data.frame(
+  control  = cnt_matrix_phage$omv_control  + cnt_matrix_phage$wc_control,
+  infected = cnt_matrix_phage$omv_infected + cnt_matrix_phage$wc_infected,
+  row.names = rownames(cnt_matrix_phage)
+)
+```
+
+CLR
+```{r, fig.height=7, fig.width=20}
+source("../CLR.R")
+source("../CLR_control.R")
+wrap_plots(plots, ncol = 3)
+```
+
+```{r}
+# Construction of a distance matrix for PCoA
+dist_matrix_clr <- vegdist(t(clr), method = "euclidean")
+
+# Compute principal coordinate decomposition
+pcoa_clr <- pcoa(dist_matrix_clr)
+
+# Plot PCoA2 vs PCoA2
+pcoa_df_clr <- data.frame(
+  condition = rownames(pcoa_clr$vectors),
+  Axis1 = pcoa_clr$vectors[, 1],
+  Axis2 = pcoa_clr$vectors[, 2]
+  )
+
+pcoa_df_clr <- left_join(pcoa_df_clr, SRRs, by = "condition")
+
+ggplot(pcoa_df_clr, aes(x = Axis1, y = Axis2, color = state, label = isolate)) +
+  geom_point(size = 4) +
+  geom_text(vjust = -0.8, size = 3.5, color = "black") +
+  theme_minimal() +
+  scale_color_manual(values = c("control" = "darkblue", "infected" = "red"))+
+  labs(
+    x = paste0("PCoA 1 (", round(pcoa_clr$values$Relative_eig[1] * 100, 1), "%)"),
+    y = paste0("PCoA 2 (", round(pcoa_clr$values$Relative_eig[2] * 100, 1), "%)"),
+    color = "Infection state")
+```
+
+COMPUTE CORRELATION BETWEEN DEFENSE SYSTEMS EXPRESSION AND BACTERIAL GROWTH / PHAGE GROWTH
+```{r}
+source("../correlation_ds_growth.R")
+
+for (ds_ in unique(ds$type)) {
+  save_correlation(ds_, median_growth_markers_clr, "ribosome")
+  save_correlation(ds_, median_struct_phage_clr, "phage")
+}
+```
+

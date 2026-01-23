@@ -1,0 +1,5 @@
+sys_id,type,subtype,activity,sys_beg,sys_end,protein_in_syst,genes_count,name_of_profiles_in_sys,Geneid
+ordered_protein_Retron_II_2,Retron,Retron_II,Defense,WP_001034589.1,WP_226347323.1,WP_001034589.1,2,"Retron_II__NDT,Retron__RT_Tot_6",C2566_RS07945
+ordered_protein_Retron_II_2,Retron,Retron_II,Defense,WP_001034589.1,WP_226347323.1,WP_226347323.1,2,"Retron_II__NDT,Retron__RT_Tot_6",C2566_RS07950
+ordered_protein_MazEF_1,MazEF,MazEF,Defense,WP_000254738.1,WP_000581937.1,WP_000254738.1,2,"MazEF__MazE,MazEF__MazF",C2566_RS17230
+ordered_protein_MazEF_1,MazEF,MazEF,Defense,WP_000254738.1,WP_000581937.1,WP_000581937.1,2,"MazEF__MazE,MazEF__MazF",C2566_RS17235

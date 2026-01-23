@@ -1,0 +1,410 @@
+---
+title: "PRJNA315575"
+output: html_notebook
+---
+
+
+LOADING PACKAGES
+
+```{r}
+source("../load_packages.R")
+```
+
+LOADING FILES
+
+```{r}
+# Need to be in the wanted project folder !
+source("../load_files.R")
+
+SRRs <- SRRs %>%
+  group_by(timepoint, control_or_infected) %>%
+  mutate(rep = row_number()) %>%
+  ungroup() %>%
+  mutate(condition = paste0(timepoint, "_", control_or_infected, "_", rep)) %>%
+  mutate(timepoint = as.numeric(timepoint))
+```
+```{r}
+# Create count matrixes for all genes + bacterial genes+ phage genes
+source("../count_matrices.R")
+
+# Quality control steps
+source("../qc_steps.R")
+```
+```{r}
+# Computes CLR for all the genes, the ribosomal genes and the structural phage genes
+# To adpat according to column names 
+source("../CLR.R")
+
+# Plot PCoA
+## Compute PCoA (based on CLR values) and plot it
+
+dist_matrix_clr <- vegdist(t(clr), method = "euclidean")
+
+# Compute principal coordinate decomposition
+pcoa_clr <- pcoa(dist_matrix_clr)
+
+pcoa_df_clr <- data.frame(
+  condition = rownames(pcoa_clr$vectors),
+  Axis1 = pcoa_clr$vectors[, 1],
+  Axis2 = pcoa_clr$vectors[, 2]
+)
+
+pcoa_df_clr <- left_join(pcoa_df_clr, SRRs, by = "condition")
+
+# Create combined variable for color mapping - to adapt
+pcoa_df_clr$group <- paste0(pcoa_df_clr$control_or_infected, "_", pcoa_df_clr$light_or_dark)
+
+ggplot(pcoa_df_clr, aes(x = Axis1, y = Axis2, color = group, label = timepoint)) +
+  geom_point(size = 4) +
+  geom_text(vjust = -0.8, size = 3.5, color = "black") +
+  theme_minimal() +
+  scale_color_manual(
+    values = c(
+      "control_light"   = "#7fbfff",  
+      "control_dark"    = "#003f8c",  
+      "infected_light"  = "#ff7f7f", 
+      "infected_dark"   = "red"   
+    ),
+    name = "Condition"
+  ) +
+  labs(
+    x = paste0("PCoA 1 (", round(pcoa_clr$values$Relative_eig[1] * 100, 1), "%)"),
+    y = paste0("PCoA 2 (", round(pcoa_clr$values$Relative_eig[2] * 100, 1), "%)")
+  )
+```
+```{r, fig.height=30, fig.width=20}
+source("../CLR_control.R")
+wrap_plots(plots, ncol = 3)
+```
+
+
+
+```{r}
+plot_CLR <- function(protein, ds_type) {
+  protein_clr <- clr[protein, , drop = FALSE]
+
+  protein_clr <- protein_clr %>%
+    t() %>%
+    as.data.frame() %>%
+    rownames_to_column("time_infection_light_rep") %>%
+    separate(time_infection_light_rep, into = c("time", "state", "light", "rep"), sep = "_") %>%
+    mutate(color = paste0(state, "_", light)) %>%
+    mutate(time = as.numeric(time)) %>%
+    pivot_longer(
+      cols = -c(time, state, light, rep, color),   
+      names_to = "protein",
+      values_to = "value"
+    ) %>%
+    group_by(time, color) %>%
+    summarise(
+      median = median(value, na.rm = TRUE),
+      sd     = sd(value, na.rm = TRUE),
+      .groups = "drop"
+    )
+
+
+  # Plot
+  ggplot(protein_clr, aes(x = time, y = median, color = color, group = color)) +
+    geom_errorbar(aes(ymin = median-sd, ymax = median+sd)) +
+    geom_line(size = 1.2) +
+    geom_point(size = 3) +
+    theme_minimal() +
+    ylim(-0.7, 0.5) +
+    scale_color_manual(
+      values = c(
+        "control_light"   = "#7fbfff",  
+        "control_dark"    = "#003f8c",  
+        "infected_light"  = "#ff7f7f", 
+        "infected_dark"   = "red"   
+      )) +
+    labs(
+      title = paste("Defense system = ", ds_type),
+      x = "Time post infection (h)",
+      y = "median CLR"
+    ) +
+    theme(
+      plot.title = element_text(size = 15, face = "bold"),      
+      axis.title.x = element_text(size = 15),                 
+      axis.title.y = element_text(size = 15),                
+      axis.text.x = element_text(size = 16),                    
+      axis.text.y = element_text(size = 16)                      
+  )
+}
+```
+
+```{r, fig.height=4, fig.width=6}
+plots <- list()
+for (ds_ in unique(ds$type)) {
+  proteins <- ds %>% filter(type == ds_) %>% pull(protein_in_syst)
+  plots[[ds_]] <- plot_CLR(proteins, ds_)
+}
+
+wrap_plots(plots, ncol = 1)
+```
+
+
+DESEQ + VOLCANO PLOT FUNCTION (control vs infected)
+
+```{r}
+deseq_volcano_c_i <- function(t, light) {
+  # columns of cnt_matrix to select
+  cols <- c(paste0(t, "_control_", light, "_1"),
+      paste0(t, "_control_", light, "_2"),
+      paste0(t, "_infected_", light, "_1"),
+      paste0(t, "_infected_", light, "_2")
+    )
+  
+  # construction of DESeq dataset
+  coldata <- data.frame(
+    row.names = cols,
+    condition = factor(c("control", "control", "infected", "infected"))
+  )
+  
+  countData <- round(cnt_matrix[,cols]+1)
+  
+  dds <- DESeqDataSetFromMatrix(countData = countData,
+                                colData = coldata,
+                                design = ~ condition)
+  
+  # differential expression analysis
+  dds <- DESeq(dds)
+  res <- as.data.frame(results(dds, alpha = 0.1, pAdjustMethod = "fdr"))
+  
+  # label for defense genes 
+  labels <- ds$type[match(rownames(res), ds$protein_in_syst)]
+  labels[is.na(labels)] <- ""
+  
+  # add column labels (character and logical)
+  res <- mutate(res, label=labels)
+  res <- mutate(res, ds = factor(res$label != ""))
+  res <- mutate(res, Gene_origin = cts$Gene_origin[match(rownames(res), cts$Geneid)])
+  
+  # plot -Log10 FDR vs Log fold change
+  plot <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = ds)) +
+    geom_point(data = subset(res, ds == "FALSE"), color = "grey", alpha = 0.3) +
+    geom_point(data = subset(res, ds == "TRUE"), color = "darkgreen") +
+    geom_point(data = subset(res, Gene_origin == "Phage"), color = "salmon") +
+    geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black") +
+    geom_label_repel(data = subset(res, ds == "TRUE" & padj < 0.05),
+        aes(label = label), 
+        size = 3, 
+        max.overlaps = Inf, 
+        show.legend = NA,
+        colour = "black"
+  ) +
+    xlim(-10, 10) +
+    ylim(0, 25) +
+    annotate("text", x=-5, y=20, label = paste0(t, " h (C vs I) - ", light)) +
+    theme_bw()
+
+
+  return(plot)
+}
+```
+
+```{r, fig.height=18, fig.width=16}
+plot1 <- deseq_volcano_c_i(0.5, "light") 
+plot2 <- deseq_volcano_c_i(1.5, "light") 
+plot3 <- deseq_volcano_c_i(2.5, "light") 
+plot4 <- deseq_volcano_c_i(4.5, "light") 
+plot5 <- deseq_volcano_c_i(8.5, "light") 
+plot6 <- deseq_volcano_c_i(0.5, "dark") 
+plot7 <- deseq_volcano_c_i(1.5, "dark") 
+plot8 <- deseq_volcano_c_i(2.5, "dark") 
+plot9 <- deseq_volcano_c_i(4.5, "dark") 
+plot10 <- deseq_volcano_c_i(8.5, "dark")
+
+plot1 + plot2 + plot3 + plot4 + plot5+ plot6+ plot7 + plot8 + plot9 + plot10 + plot_layout(ncol = 3) 
+```
+DESEQ + VOLCANO PLOT FUNCTION (0.5h vs 8.5)
+
+```{r}
+deseq_volcano_0.5_8.5 <- function(state, light) {
+  # columns of cnt_matrix to select
+  cols <- c(paste0("0.5_", state, "_", light, "_1"),
+      paste0("0.5_", state, "_",  light, "_2"),
+      paste0("8.5_", state, "_", light, "_1"),
+      paste0("8.5_", state, "_", light, "_2")
+    )
+  
+  # construction of DESeq dataset
+  coldata <- data.frame(
+    row.names = cols,
+    condition = factor(c("0.5", "0.5", "8.5", "8.5"))
+  )
+  
+  countData <- round(cnt_matrix[,cols]+1)
+  
+  dds <- DESeqDataSetFromMatrix(countData = countData,
+                                colData = coldata,
+                                design = ~ condition)
+  
+  # differential expression analysis
+  dds <- DESeq(dds)
+  res <- as.data.frame(results(dds, alpha = 0.1, pAdjustMethod = "fdr"))
+  
+  # label for defense genes 
+  labels <- ds$type[match(rownames(res), ds$protein_in_syst)]
+  labels[is.na(labels)] <- ""
+  
+  # add column labels (character and logical)
+  res <- mutate(res, label=labels)
+  res <- mutate(res, ds = factor(res$label != ""))
+  res <- mutate(res, Gene_origin = cts$Gene_origin[match(rownames(res), cts$Geneid)])
+  
+  # plot -Log10 FDR vs Log fold change
+  plot <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = ds)) +
+    geom_point(data = subset(res, ds == "FALSE"), color = "grey", alpha = 0.3) +
+    geom_point(data = subset(res, ds == "TRUE"), color = "darkgreen") +
+    geom_point(data = subset(res, Gene_origin == "Phage"), color = "salmon") +
+    geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black") +
+    geom_label_repel(data = subset(res, ds == "TRUE" & padj < 0.05),
+        aes(label = label), 
+        size = 3, 
+        max.overlaps = Inf, 
+        show.legend = NA,
+        colour = "black"
+  ) +
+    xlim(-10, 10) +
+    ylim(0, 25) +
+    annotate("text", x=-5, y=20, label = paste0("0.5h vs 8.5h - ", state, " - ", light)) +
+    theme_bw()
+
+
+  return(plot)
+}
+```
+
+```{r, fig.height=10, fig.width=11}
+plot11 <- deseq_volcano_0.5_8.5("control", "light") 
+plot12 <- deseq_volcano_0.5_8.5("infected", "light") 
+plot13 <- deseq_volcano_0.5_8.5("control", "dark") 
+plot14 <- deseq_volcano_0.5_8.5("infected", "dark") 
+
+
+plot11 + plot12 + plot13 + plot14 + plot_layout(ncol = 2) 
+```
+DESEQ + VOLCANO PLOT FUNCTION (light vs dark)
+
+```{r}
+deseq_volcano_l_d <- function(t, state) {
+  # columns of cnt_matrix to select
+  cols <- c(paste0(t, "_", state, "_light_1"),
+      paste0(t, "_", state, "_light_2"),
+      paste0(t, "_", state, "_dark_1"),
+      paste0(t, "_", state, "_dark_2")
+    )
+  
+  # construction of DESeq dataset
+  coldata <- data.frame(
+    row.names = cols,
+    condition = factor(c("light", "light", "dark", "dark"))
+  )
+  
+  countData <- round(cnt_matrix[,cols]+1)
+  
+  dds <- DESeqDataSetFromMatrix(countData = countData,
+                                colData = coldata,
+                                design = ~ condition)
+  
+  # differential expression analysis
+  dds <- DESeq(dds)
+  res <- as.data.frame(results(dds, alpha = 0.1, pAdjustMethod = "fdr"))
+  
+  # label for defense genes 
+  labels <- ds$type[match(rownames(res), ds$protein_in_syst)]
+  labels[is.na(labels)] <- ""
+  
+  # add column labels (character and logical)
+  res <- mutate(res, label=labels)
+  res <- mutate(res, ds = factor(res$label != ""))
+  res <- mutate(res, Gene_origin = cts$Gene_origin[match(rownames(res), cts$Geneid)])
+  
+  # plot -Log10 FDR vs Log fold change
+  plot <- ggplot(res, aes(x = log2FoldChange, y = -log10(padj), color = ds)) +
+    geom_point(data = subset(res, ds == "FALSE"), color = "grey", alpha = 0.3) +
+    geom_point(data = subset(res, ds == "TRUE"), color = "darkgreen") +
+    geom_point(data = subset(res, Gene_origin == "Phage"), color = "salmon") +
+    geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "black") +
+    geom_label_repel(data = subset(res, ds == "TRUE" & padj < 0.05),
+        aes(label = label), 
+        size = 3, 
+        max.overlaps = Inf, 
+        show.legend = NA,
+        colour = "black"
+  ) +
+    xlim(-10, 10) +
+    ylim(0, 25) +
+    annotate("text", x=-5, y=20, label = paste0(t, " h (light vs dark) - ", state)) +
+    theme_bw()
+
+
+  return(plot)
+}
+```
+
+```{r, fig.height=18, fig.width=16}
+plot1_ <- deseq_volcano_l_d(0.5, "control") 
+plot2_ <- deseq_volcano_l_d(1.5, "control") 
+plot3_ <- deseq_volcano_l_d(2.5, "control") 
+plot4_ <- deseq_volcano_l_d(4.5, "control") 
+plot5_ <- deseq_volcano_l_d(8.5, "control") 
+plot6_ <- deseq_volcano_l_d(0.5, "infected") 
+plot7_ <- deseq_volcano_l_d(1.5, "infected") 
+plot8_ <- deseq_volcano_l_d(2.5, "infected") 
+plot9_ <- deseq_volcano_l_d(4.5, "infected") 
+plot10_ <- deseq_volcano_l_d(8.5, "infected")
+
+plot1_ + plot2_ + plot3_ + plot4_ + plot5_+ plot6_+ plot7_ + plot8_ + plot9_ + plot10_ + plot_layout(ncol = 3) 
+```
+
+
+PLOT DEFENSE SYSTEMS CLR vs GROWTH MARKERS CLR
+
+```{r, fig.height=8, fig.width=20}
+source("../plot_ds_vs_growth.R")
+
+conditions <- c("control_light", "control_dark", "infected_light", "infected_dark")
+plots_list <- list()
+
+for (cond in conditions) {
+  plots_cond <- list()
+  for (ds_ in unique(ds$type)) {
+    proteins <- ds %>% filter(type == ds_) %>% pull(protein_in_syst)
+    plots_cond[[ds_]] <- plot_ds_vs_growth(proteins, ds_, median_growth_markers_clr, "ribosome genes", condition_filter = cond)
+  }
+  plots_list[[cond]] <- wrap_plots(plots_cond, ncol = 2)
+}
+all_plots <- wrap_plots(plots_list, ncol = 2)
+all_plots
+```
+```{r, fig.height=8, fig.width=20}
+source("../plot_ds_vs_growth.R")
+
+plots_list <- list()
+
+for (cond in conditions) {
+  plots_cond <- list()
+  for (ds_ in unique(ds$type)) {
+    proteins <- ds %>% filter(type == ds_) %>% pull(protein_in_syst)
+    plots_cond[[ds_]] <- plot_ds_vs_growth(proteins, ds_, median_struct_phage_clr, "structural phage genes", condition_filter = cond)
+  }
+  plots_list[[cond]] <- wrap_plots(plots_cond, ncol = 2)
+}
+all_plots <- wrap_plots(plots_list, ncol = 2)
+all_plots
+```
+
+COMPUTE CORRELATION BETWEEN DEFENSE SYSTEMS EXPRESSION AND BACTERIAL GROWTH / PHAGE GROWTH
+```{r}
+source("../correlation_ds_growth.R")
+conditions <- c("infected", "control")
+
+for (condition in conditions) {
+  for (ds_ in unique(ds$type)) {
+    save_correlation(ds_, median_growth_markers_clr, "ribosome", condition)
+    save_correlation(ds_, median_struct_phage_clr, "phage", condition)
+  }
+}
+```
+

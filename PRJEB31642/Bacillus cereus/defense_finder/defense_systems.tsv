@@ -1,0 +1,7 @@
+sys_id	type	subtype	activity	sys_beg	sys_end	protein_in_syst	genes_count	name_of_profiles_in_sys
+ordered_protein_Pseudo-CoCoNut_5	CoCoNut	Pseudo-CoCoNut	Defense	AJH74384.1	AJH73757.1	AJH74384.1,AJH73757.1	2	CoCoNut-Pseudo-CoCoNut__Pseudo_CnuB,CoCoNut-Pseudo-CoCoNut__Pseudo_CnuC
+ordered_protein_gcu233_6	gcu233	gcu233	Defense	AJH72922.1	AJH72922.1	AJH72922.1	1	gcu233__gcu233
+ordered_protein_DS-32_2	DS-32	DS-32	Defense	AJH73702.1	AJH75272.1	AJH73702.1,AJH75272.1	2	DS-32__DS-32A,DS-32__DS-32B
+ordered_protein_AbiAlpha_1	AbiAlpha	AbiAlpha	Defense	AJH72241.1	AJH72241.1	AJH72241.1	1	AbiAlpha__AbiAlpha
+ordered_protein_NLR_like_bNACHT01_4	NLR	NLR_like_bNACHT01	Defense	AJH72795.1	AJH72795.1	AJH72795.1	1	NLR_like_bNACHT01__NLR_like_bNACHT01
+ordered_protein_Lamassu-Cap4_nuclease_3	Lamassu-Fam	Lamassu-Cap4_nuclease	Defense	AJH76602.1	AJH75038.1	AJH76602.1,AJH75038.1	2	Lamassu-Fam__LmuA_effector_Cap4_nuclease_II,Lamassu-Fam__LmuB_SMC_Hydrolase_protease

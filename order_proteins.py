@@ -6,7 +6,7 @@ import argparse
 import Bio.SeqIO.FastaIO as FastaIO
 
 folders = [
-    "C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJNA836150"
+    "C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJEB31642/Bacillus cereus/ncbi_reference_genome"
 ]
 
 
