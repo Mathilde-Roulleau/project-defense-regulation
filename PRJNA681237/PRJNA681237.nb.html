@@ -1765,21 +1765,9 @@ display: none;
 <p>LOADING FILES</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVjMjkxY21ObEtGd2lMaTR2Ykc5aFpGOW1hV3hsY3k1U1hDSXBYRzVjYmxOU1VuTWdQQzBnVTFKU2N5QWxQaVZjYmlBZ2JYVjBZWFJsS0ZScGJXVWdQU0JqWVhObFgzZG9aVzRvWEc0Z0lDQWdkSEpsWVhSdFpXNTBYM1JwYldVZ1BUMGdYQ0oxYm5SeVpXRjBaV1JjSWlCK0lEQXNYRzRnSUNBZ1ZGSlZSU0IrSUdGekxtNTFiV1Z5YVdNb2MzUnlYM0psYlc5MlpWOWhiR3dvZEhKbFlYUnRaVzUwWDNScGJXVXNJRndpSUcxcGJpQjNhWFJvSUhCb1lXZGxYQ0lwS1NrcElDVStKVnh1SUNCaGNuSmhibWRsS0ZScGJXVXBYRzVjYmxOU1VuTWdQQzBnVTFKU2N5QWxQaVZjYmlBZ1ozSnZkWEJmWW5rb1ZHbHRaU2tnSlQ0bFhHNGdJRzExZEdGMFpTaHlaWEFnUFNCeWIzZGZiblZ0WW1WeUtDa3BJQ1UrSlZ4dUlDQjFibWR5YjNWd0tDa2dKVDRsWEc0Z0lHMTFkR0YwWlNoamIyNWthWFJwYjI0Z1BTQndZWE4wWlRBb1ZHbHRaU3dnWENKZlhDSXNJSEpsY0NrcFhHNWdZR0FpZlE9PSAtLT5cblxuYGBgclxuc291cmNlKFwiLi4vbG9hZF9maWxlcy5SXCIpXG5cblNSUnMgPC0gU1JScyAlPiVcbiAgbXV0YXRlKFRpbWUgPSBjYXNlX3doZW4oXG4gICAgdHJlYXRtZW50X3RpbWUgPT0gXCJ1bnRyZWF0ZWRcIiB+IDAsXG4gICAgVFJVRSB+IGFzLm51bWVyaWMoc3RyX3JlbW92ZV9hbGwodHJlYXRtZW50X3RpbWUsIFwiIG1pbiB3aXRoIHBoYWdlXCIpKSkpICU+JVxuICBhcnJhbmdlKFRpbWUpXG5cblNSUnMgPC0gU1JScyAlPiVcbiAgZ3JvdXBfYnkoVGltZSkgJT4lXG4gIG11dGF0ZShyZXAgPSByb3dfbnVtYmVyKCkpICU+JVxuICB1bmdyb3VwKCkgJT4lXG4gIG11dGF0ZShjb25kaXRpb24gPSBwYXN0ZTAoVGltZSwgXCJfXCIsIHJlcCkpXG5gYGBcblxuPCEtLSBybmItc291cmNlLWVuZCAtLT5cbiJ9 -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc291cmNlKFwiLi4vbG9hZF9maWxlcy5SXCIpXG5cblNSUnMgPC0gU1JScyAlPiVcbiAgbXV0YXRlKFRpbWUgPSBjYXNlX3doZW4oXG4gICAgdHJlYXRtZW50X3RpbWUgPT0gXCJ1bnRyZWF0ZWRcIiB+IDAsXG4gICAgVFJVRSB+IGFzLm51bWVyaWMoc3RyX3JlbW92ZV9hbGwodHJlYXRtZW50X3RpbWUsIFwiIG1pbiB3aXRoIHBoYWdlXCIpKSkpICU+JVxuICBhcnJhbmdlKFRpbWUpXG5cblNSUnMgPC0gU1JScyAlPiVcbiAgZ3JvdXBfYnkoVGltZSkgJT4lXG4gIG11dGF0ZShyZXAgPSByb3dfbnVtYmVyKCkpICU+JVxuICB1bmdyb3VwKCkgJT4lXG4gIG11dGF0ZShjb25kaXRpb24gPSBwYXN0ZTAoVGltZSwgXCJfXCIsIHJlcCkpXG5gYGAifQ== -->
-<pre class="r"><code>source(&quot;../load_files.R&quot;)
-
-SRRs &lt;- SRRs %&gt;%
-  mutate(Time = case_when(
-    treatment_time == &quot;untreated&quot; ~ 0,
-    TRUE ~ as.numeric(str_remove_all(treatment_time, &quot; min with phage&quot;)))) %&gt;%
-  arrange(Time)
-
-SRRs &lt;- SRRs %&gt;%
-  group_by(Time) %&gt;%
-  mutate(rep = row_number()) %&gt;%
-  ungroup() %&gt;%
-  mutate(condition = paste0(Time, &quot;_&quot;, rep))</code></pre>
+<!-- rnb-output-begin eyJkYXRhIjoiXG48IS0tIHJuYi1zb3VyY2UtYmVnaW4gZXlKa1lYUmhJam9pWUdCZ2NseHVjMjkxY21ObEtGd2lMaTR2Ykc5aFpGOW1hV3hsY3k1U1hDSXBYRzVnWUdBaWZRPT0gLS0+XG5cbmBgYHJcbnNvdXJjZShcIi4uL2xvYWRfZmlsZXMuUlwiKVxuYGBgXG5cbjwhLS0gcm5iLXNvdXJjZS1lbmQgLS0+XG4ifQ== -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc291cmNlKFwiLi4vbG9hZF9maWxlcy5SXCIpXG5gYGAifQ== -->
+<pre class="r"><code>source(&quot;../load_files.R&quot;)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-output-end -->
 <!-- rnb-chunk-end -->

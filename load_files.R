@@ -3,20 +3,12 @@ project <- str_extract(path, "PRJ[^\\\\/]*")
 google_sheet_url <- "https://docs.google.com/spreadsheets/d/1DwDgeSOugfCSfyAb6feXC-KmUsX-ejwrghj_iXVWOtg/edit?gid=1293325500#gid=1293325500"
 
 # load info on project
-projects_list <- read_sheet(google_sheet_url, sheet = "projects_list")
-species <- projects_list %>%
-  filter(Project_ID == project) %>%
-  pull(Species)
+projects_list <- read_sheet(google_sheet_url, sheet = "projects_list") %>%
+  filter(Project_ID == project)
 
-strain <- projects_list %>%
-  filter(Project_ID == project) %>%
-  pull(Strain) %>%
-  unlist()
-
-phage <- projects_list %>%
-  filter(Project_ID == project) %>%
-  pull(Phage)
-
+species <- projects_list$Species
+strain  <- unlist(projects_list$Strain)
+phage   <- projects_list$Phage
 
 
 # load metadata
@@ -27,20 +19,27 @@ cts <- fread("../counts_merged.tsv")[run_accession %in% SRRs$Run]
 names(cts)[names(cts) == "run_accession"] <- "Run"
 
 # select runs and classify gene origin
-bacterial_genome <- read.gff("ncbi_reference_genome/genomic.gff")
-bacterial_genome <- bacterial_genome %>%
-  separate_rows(attributes, sep = ";") %>%        
-  separate(attributes, into = c("key", "value"), sep = "=", fill = "right") %>%  
-  pivot_wider(names_from = key, values_from = value)
+bacterial_genome <- as.data.table(read.gff("ncbi_reference_genome/genomic.gff"))
 
-cts <- cts %>%
-  mutate(Gene_origin = ifelse(
-    sapply(Chr, function(x){
-      any(strsplit(x, ";")[[1]] %in% bacterial_genome$seqid)
-    }),
-    "Bacteria",
-    "Phage"
-  ))
+bacterial_genome[, gene :=
+                   fifelse(
+                     grepl("gene=", attributes),
+                     sub(".*gene=([^;]+).*", "\\1", attributes),
+                     NA_character_) ]
+bacterial_genome[, protein_id :=
+                   fifelse(
+                     grepl("protein_id=", attributes),
+                     sub(".*protein_id=([^;]+).*", "\\1", attributes),
+                     NA_character_) ]
+
+bacterial_genome <- bacterial_genome[, .(seqid, gene, protein_id)]
+
+cts[, Gene_origin :=
+      ifelse(vapply(strsplit(Chr, ";"),
+                    function(x) any(x %in% bacterial_genome$seqid),
+                    logical(1)),
+             "Bacteria", "Phage")]
+
 
 
 cts$Geneid <- sub("^cds-", "", cts$Geneid)
@@ -57,5 +56,7 @@ phage_accession <- phage_accession[phage_accession$Project_ID == project, ]$phag
 
 # phage genome
 phage_genome <- read_tsv(paste0("genomad/", phage_accession, "_genes.tsv"))
+structure_phage <- regex("tail|capsid|head", ignore_case = TRUE)
 structural_phage_genes <- phage_genome %>%
-  filter(replace_na(str_detect(annotation_description, "tail|capsid|head"), FALSE))
+  filter(str_detect(annotation_description, structure_phage))
+

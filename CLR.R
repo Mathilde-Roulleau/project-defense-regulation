@@ -13,12 +13,12 @@ vst <- varianceStabilizingTransformation(dds_for_vst) %>%
   as.data.frame()
 
 
-vst <- 2^(vst)
+vst <- 2^(vst) # because vst function apply a log(2)
 
 
 # Normalization by gene length
 genes_length <- cts$Length[match(rownames(vst), cts$Geneid)]
-vst <- vst/(genes_length * 10^(-3)) # bizarre de le faire après le 2^ ? 
+vst <- vst/(genes_length * 10^(-3))
 
 
 # Centered Log2 Ratio (CLR)

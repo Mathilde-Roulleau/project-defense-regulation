@@ -42,7 +42,7 @@ source("../CLR_control.R")
 wrap_plots(plots, ncol = 3)
 ```
 
-```{r}
+```{r, fig.height=5, fig.width=7}
 # Construction of a distance matrix for PCoA
 dist_matrix_clr <- vegdist(t(clr), method = "euclidean")
 
@@ -60,12 +60,13 @@ pcoa_df_clr <- left_join(pcoa_df_clr, SRRs, by = "condition")
 
 ggplot(pcoa_df_clr, aes(x = Axis1, y = Axis2, color = Time, label = Time)) +
   geom_point(size = 4) +
-  geom_text(vjust = -0.8, size = 3.5, color = "black") +
-  theme_minimal() +
+  geom_text(vjust = -0.8, size = 3.5, color = "grey30") +
+  scale_color_gradient(low = "#FADBD8", high = "red") +
+  theme_classic() +
   labs(
     x = paste0("PCoA 1 (", round(pcoa_clr$values$Relative_eig[1] * 100, 1), "%)"),
     y = paste0("PCoA 2 (", round(pcoa_clr$values$Relative_eig[2] * 100, 1), "%)"),
-    color = "Condition")
+    color = "Time (min)")
 ```
 
 COMPUTE CORRELATION BETWEEN DEFENSE SYSTEMS EXPRESSION AND BACTERIAL GROWTH / PHAGE GROWTH
