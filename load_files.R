@@ -15,7 +15,7 @@ phage   <- projects_list$Phage
 SRRs <- read.csv("metadata.csv", header = TRUE)
 
 # load gene counts for each run
-cts <- fread("../counts_merged.tsv")[run_accession %in% SRRs$Run]
+cts <- fread("../counts_merged.csv")[run_accession %in% SRRs$Run]
 names(cts)[names(cts) == "run_accession"] <- "Run"
 
 # select runs and classify gene origin

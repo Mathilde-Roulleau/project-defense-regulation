@@ -21,3 +21,6 @@ source("PCoA.R")
 
 # Compute correlation between genes expression (ds and all genes) and bacterial growth / phage growth
 source("../correlation_ds_growth.R")
+#source("../plotCLR.R")
+source("../partial_correlation_ds_growth.R")
+source("../correlations_all_genes.R")

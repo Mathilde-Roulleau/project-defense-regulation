@@ -101,7 +101,7 @@ compute_one_result <- function(ds_type, markers_clr, markers, condition = NA, us
 
 
 
-write_results_to_sheet <- function(df, sheet_name = "Growth_markers") {
+write_results_to_sheet <- function(df, sheet_name = "ds_correlations") {
 
   for (i in seq_len(nrow(df))) {
     sheet <- read_sheet(google_sheet_url, sheet = sheet_name)
@@ -126,7 +126,7 @@ write_results_to_sheet <- function(df, sheet_name = "Growth_markers") {
     col_corr  <- ifelse(row$marker_type == "ribosome", "G", "H")
     col_pval  <- ifelse(row$marker_type == "ribosome", "I", "J")
     col_padj  <- ifelse(row$marker_type == "ribosome", "K", "L")
-    col_n     <- "M"
+    col_n     <- "S"
     
     # row already exists
     if (length(row_id) >= 1) {
@@ -190,3 +190,6 @@ for (condition in conditions) {
   # write to sheet
   write_results_to_sheet(all_results)
 }
+
+
+
