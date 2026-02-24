@@ -79,7 +79,7 @@ p_ribo <- plot_corr_violin(df_filt,
   orientation = "horizontal")
 
 ggsave(
-  "C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/partial_correlations_analysis/density_partial_corr_ribosome.pdf",
+  "C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/DS_partial_correlations_analysis/density_partial_corr_ribosome.pdf",
   p_ribo, height = 50, width = 90, unit = "mm")
 
 p_phage <- plot_corr_violin(df_filt,
@@ -88,7 +88,7 @@ p_phage <- plot_corr_violin(df_filt,
   orientation = "horizontal")
 
 ggsave(
-  "C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/partial_correlations_analysis/density_partial_corr_phage.pdf",
+  "C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/DS_partial_correlations_analysis/density_partial_corr_phage.pdf",
   p_phage, height = 50, width = 90, unit = "mm")
 
 # Highlighting projects
@@ -104,10 +104,10 @@ p_phage_proj <- plot_corr_violin(
   orientation = "vertical")
 
 ggsave(
-  "C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/correlations_analysis/density_partial_corr_ribosome_Xproject.pdf",
+  "C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/DS_partial_correlations_analysis/density_partial_corr_ribosome_Xproject.pdf",
   p_ribo_proj, height = 90, width = 140, unit = "mm")
 ggsave(
-  "C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/correlations_analysis/density_partial_corr_phage_Xproject.pdf",
+  "C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/DS_partial_correlations_analysis/density_partial_corr_phage_Xproject.pdf",
   p_phage_proj, height = 90, width = 140, unit = "mm")
 
 #ggplotly(p_ribo_proj, tooltip = "text")
@@ -127,10 +127,10 @@ p_phage_ds <- plot_corr_violin(df_filt,
 )
 
 ggsave(
-  "C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/correlations_analysis/density_partial_corr_ribosome_Xds.pdf",
+  "C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/DS_partial_correlations_analysis/density_partial_corr_ribosome_Xds.pdf",
   p_ribosome_ds, height = 90, width = 200, unit = "mm")
 ggsave(
-  "C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/correlations_analysis/density_partial_corr_phage_Xds.pdf",
+  "C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/DS_partial_correlations_analysis/density_partial_corr_phage_Xds.pdf",
   p_phage_ds, height = 90, width = 200, unit = "mm")
 
 #ggplotly(p_phage_ds, tooltip = "text")
@@ -270,15 +270,15 @@ heatmap_correlation_strength <- function(ds_or_project = c("project", "defense_s
 }
 
 
-ggsave("C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/correlations_analysis/heatmap_partial_corr_ribosome_Xproject.pdf", 
+ggsave("C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/DS_partial_correlations_analysis/heatmap_partial_corr_ribosome_Xproject.pdf", 
        heatmap_correlation_strength("project", "ribosome", "infected"), height = 200, width = 200, unit = "mm")
-ggsave("C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/correlations_analysis/heatmap_partial_corr_phage_Xproject.pdf", 
+ggsave("C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/DS_partial_correlations_analysis/heatmap_partial_corr_phage_Xproject.pdf", 
        heatmap_correlation_strength("project", "phage", "infected"), height = 200, width = 200, unit = "mm")
-ggsave("C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/correlations_analysis/heatmap_partial_corr_ribosome_Xds.pdf", 
+ggsave("C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/DS_partial_correlations_analysis/heatmap_partial_corr_ribosome_Xds.pdf", 
        heatmap_correlation_strength("defense_system", "ribosome", "infected"), height = 200, width = 200, unit = "mm")
-ggsave("C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/correlations_analysis/heatmap_partial_corr_ribosome_Xds_control.pdf", 
+ggsave("C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/DS_partial_correlations_analysis/heatmap_partial_corr_ribosome_Xds_control.pdf", 
        heatmap_correlation_strength("defense_system", "ribosome", "control"), height = 200, width = 200, unit = "mm")
-ggsave("C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/correlations_analysis/heatmap_partial_corr_ribosome_Xproject_control.pdf", 
+ggsave("C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/DS_partial_correlations_analysis/heatmap_partial_corr_ribosome_Xproject_control.pdf", 
        heatmap_correlation_strength("project", "ribosome", "control"), height = 200, width = 200, unit = "mm")
 
 
@@ -313,175 +313,6 @@ p_ribosome_vs_phage_ds_plot <- ggMarginal(
   linewidth = 1.5
 )
 
-ggsave("C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/partial_correlations_analysis/ribosome_vs_phage_ds.pdf", 
+ggsave("C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/DS_partial_correlations_analysis/ribosome_vs_phage_ds.pdf", 
        p_ribosome_vs_phage_ds_plot, height = 200, width = 200, unit = "mm")  
 #ggplotly(p_ribosome_vs_phage_ds_plot, tooltip = "text", height = 800, width = 1200)
-
-# _____Plot phage correlation vs ribosome correlation for ALL genes_____
-ribosome_vs_phage_allgenes_plot <- ggplot(p_correlation_ds_df %>% 
-  filter(Defense_system == "ALL_GENES", Condition != "control" | is.na(Condition))) +
-  geom_density_2d_filled(
-    aes(x = partial_corr_ribosome, y = partial_corr_phage, fill = after_stat(level)),
-    alpha = 0.4,
-    contour = TRUE
-  ) +
-  scale_fill_grey(start = 1, end = 0, guide = "none") +
-  geom_point(aes(x = partial_corr_ribosome, y = partial_corr_phage), color = "grey20") +
-  #geom_jitter(aes(x = partial_corr_ribosome, y = partial_corr_phage, text = paste0("Species: ", Species,"<br>Phage: ", Phage,"<br>Defense system: ", Defense_system,"<br>Correlation: ", round(partial_corr_ribosome, 3)), colour = Project),width = 0.2, height = 0,size = 0.5) +
-  geom_vline(xintercept = 0, color = "grey") +
-  geom_hline(yintercept = 0, color = "grey") +
-  ylim(-1, 1) +
-  xlim(-1, 1) +
-  ylab("Correlation to structural phage genes (all genes)") +
-  xlab("Correlation to ribosomal genes (all genes)") +
-  theme_minimal() +
-  theme(text = element_text(size = 12),
-        panel.grid.minor = element_blank(),
-        panel.grid.major.x = element_blank())
-
-ggsave("C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/correlations_analysis/ribosome_vs_phage_all_genes.pdf", 
-       ribosome_vs_phage_allgenes_plot, height = 200, width = 200, unit = "mm")  
-#ggplotly(phage_corr_density_plot, tooltip = "text", height = 800, width = 500)
-
-
-
-
-# _____Correlation rho vs Significance fdr padj_____
-df_long <- p_correlation_ds_df %>%
-  filter(Condition != "control" | is.na(Condition)) %>%
-  select(Project, Defense_system,
-         partial_corr_ribosome, partial_padj_ribosome,
-         partial_corr_phage, partial_padj_phage) %>%
-  pivot_longer(
-    cols = c(partial_corr_ribosome, partial_corr_phage),
-    names_to = "Type",
-    values_to = "rho"
-  ) %>%
-  mutate(
-    padj = ifelse(Type == "partial_corr_ribosome", partial_padj_ribosome, partial_padj_phage),
-    Type = recode(Type,
-                  partial_corr_ribosome = "Ribosome",
-                  partial_corr_phage    = "Phage"))
-
-rho_vs_padj <- ggplot(df_long, aes(x = rho, y = -log(padj))) +
-
-  stat_density_2d(aes(fill = Type), geom = "polygon", alpha = 0.25, contour = TRUE) +
-  geom_point(aes(color = Type), size = 2, alpha = 0.6) +
-  geom_point(data = df_long %>% filter(Defense_system == "ALL_GENES"),
-      aes(color = Type), shape = 21, fill = "white", size = 2, stroke = 1.2) +
-  
-  geom_hline(yintercept = -log(0.05), linetype = "dashed", color = "grey40") +
-  geom_vline(xintercept = 0, linetype = "dashed", color = "grey40") +
-  
-  xlim(-1, 1) +
-  xlab("Pearson correlation") +
-  ylab("-log(FDR-adjusted p-value)") +
-  
-  scale_color_manual(values = c("Ribosome" = "#1F78B4",
-                                "Phage"    = "#E31A1C")) +
-  scale_fill_manual(values = c("Ribosome" = "#1F78B4",
-                               "Phage"    = "#E31A1C")) +
-  
-  theme_minimal() +
-  theme(
-    text = element_text(size = 12),
-    panel.grid.minor = element_blank(),
-    panel.grid.major.x = element_blank()
-  )
-
-ggsave("C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/correlations_analysis/rho_vs_padj.pdf", 
-       rho_vs_padj, height = 200, width = 200, unit = "mm")  
-
-
-# _____Compute correlation correlation relative to global transcription_____
-all_genes_corr <- p_correlation_ds_df %>%
-  filter(Defense_system == "ALL_GENES") %>%
-  select(Project, Condition,
-         partial_corr_ribosome_all_genes = partial_corr_ribosome,
-         partial_corr_phage_all_genes    = partial_corr_phage)
-
-p_correlation_ds_df_normalized <- p_correlation_ds_df %>%
-  left_join(all_genes_corr, by = c("Project", "Condition")) %>%
-  mutate(
-    partial_corr_ribosome_normalized = partial_corr_ribosome - partial_corr_ribosome_all_genes,
-    partial_corr_phage_normalized    = partial_corr_phage - partial_corr_phage_all_genes
-  ) %>%
-  filter(Condition != "control" | is.na(Condition)) %>%
-  mutate(density_axis = "density_axis")
-
-
-# _____Density plot for relative correlation to global transcription_____
-density_corr_ribo_normalized <- plot_corr_violin(
-  p_correlation_ds_df_normalized, 
-  partial_corr_ribosome_normalized, 
-  "Project-normalized correlation to ribosomal genes", 
-  "horizontal")
-density_partial_corr_phage_normalized <- plot_corr_violin(
-  p_correlation_ds_df_normalized, 
-  partial_corr_phage_normalized, 
-  "Project-normalized correlation to structural phage genes", 
-  "horizontal")
-
-ggsave(
-  "C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/correlations_analysis/density_partial_corr_ribosome_normalized.pdf",
-  density_corr_ribo_normalized, height = 50, width = 90, unit = "mm")
-ggsave(
-  "C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/correlations_analysis/density_partial_corr_phage_normalized.pdf",
-  density_partial_corr_phage_normalized, height = 50, width = 90, unit = "mm")
-
-
-# _____Plot phage correlation vs ribosome correlation (relative to global transcription)______
-
-ribosome_vs_phage_ds_normalized <- ggplot(p_correlation_ds_df_normalized) +
-  geom_density_2d_filled(
-    aes(x = partial_corr_ribosome_normalized, y = partial_corr_phage_normalized, fill = after_stat(level)),
-    alpha = 0.4,
-    contour = TRUE
-  ) +
-  scale_fill_grey(start = 1, end = 0, guide = "none") +
-  geom_point(aes(x = partial_corr_ribosome, y = partial_corr_phage), color = "grey20") +
-  geom_vline(xintercept = 0, color = "grey") +
-  geom_hline(yintercept = 0, color = "grey") +
-  ylab("Correlation to structural phage genes (relative to global transcription)") +
-  xlab("Correlation to ribosomal genes (relative to global transcription)") +
-  theme_minimal() +
-  theme(text = element_text(size = 12),
-        panel.grid.minor = element_blank(),
-        panel.grid.major.x = element_blank())
-
-ggsave("C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/correlations_analysis/ribosome_vs_phage_ds_normalized.pdf", 
-       ribosome_vs_phage_ds_normalized, height = 200, width = 200, unit = "mm") 
-
-# _____Boxplot per defense system of relative correlation to global transcription_____
-# Only projects with more than 5 defense systems
-boxplot_corr_ribo_normalized <- ggplot(p_correlation_ds_df_normalized, 
-                                       aes(x = fct_reorder(Defense_system, partial_corr_ribosome_normalized, .fun = median, na.rm = TRUE), 
-                                           y = partial_corr_ribosome_normalized)) +
-  geom_boxplot(outlier.alpha = 0.3, color = "grey30", fill = "grey") +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  ylab("Correlation to ribosomal genes (relative to global transcription)") +
-  coord_flip() +
-  theme_minimal() +
-  theme(panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 5), 
-        axis.title = element_text(size = 8),
-        axis.title.y = element_blank())
-
-boxplot_partial_corr_phage_normalized <- ggplot(p_correlation_ds_df_normalized, 
-                                        aes(x = fct_reorder(Defense_system, partial_corr_phage_normalized, .fun = median, na.rm = TRUE), 
-                                            y = partial_corr_phage_normalized)) +
-  geom_boxplot(outlier.alpha = 0.3, color = "grey30", fill = "grey") +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  ylab("Correlation to structural phage genes (relative to global transcription)") +
-  coord_flip() +
-  theme_minimal() +
-  theme(panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 5), 
-        axis.title = element_text(size = 8),
-        axis.title.y = element_blank())
-
-ggsave("C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/correlations_analysis/boxplot_corr_ribo_normalized.pdf", 
-       boxplot_corr_ribo_normalized, height = 180, width = 120, unit = "mm")
-ggsave("C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/correlations_analysis/boxplot_partial_corr_phage_normalized.pdf", 
-       boxplot_partial_corr_phage_normalized, height = 180, width = 120, unit = "mm")
-
