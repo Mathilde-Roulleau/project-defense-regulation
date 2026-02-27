@@ -5,8 +5,10 @@ import pathlib
 import argparse
 import Bio.SeqIO.FastaIO as FastaIO
 
+
+# list of 
 folders = [
-    "C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJEB31642/Bacillus cereus/ncbi_reference_genome"
+    "C:/Users/mathi/OneDrive - epfl.ch/project-defense-regulation/PRJEB31642.1/ncbi_reference_genome"
 ]
 
 

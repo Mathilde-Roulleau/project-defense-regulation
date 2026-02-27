@@ -1,8 +1,10 @@
 # General pipeline
 # setwd() in console to set the desired project folder
 
+# To be run in the directory of the studied project
+
 # Load packages and files
-#source("../load_packages.R")
+source("../load_packages.R")
 source("../load_files.R")
 source("metadata_transformation.R")
 
@@ -21,6 +23,6 @@ source("PCoA.R")
 
 # Compute correlation between genes expression (ds and all genes) and bacterial growth / phage growth
 source("../correlation_ds_growth.R")
-#source("../plotCLR.R")
+source("../plotCLR.R")
 source("../partial_correlation_ds_growth.R")
 source("../correlations_all_genes.R")
